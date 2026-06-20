@@ -2,11 +2,8 @@ import type { NextConfig } from 'next';
 
 const config: NextConfig = {
   transpilePackages: ['@huddle/shared'],
-  experimental: {
-    // Enable server actions
-    serverActions: {
-      allowedOrigins: ['localhost:3000', 'huddle.app'],
-    },
+  serverActions: {
+    allowedOrigins: ['localhost:3000', 'huddle.app', '*.vercel.app'],
   },
   async headers() {
     return [
