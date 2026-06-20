@@ -27,7 +27,7 @@
     "expo-device": "~7.0.2",
     "expo-blur": "~14.0.3",
     "expo-camera": "~16.0.14",
-    "expo-contacts": "~14.0.0",
+    "expo-contacts": "^14.0.0",
     "expo-dev-client": "~5.0.14",
     "expo-font": "~13.0.3",
     "expo-haptics": "~14.0.1",
