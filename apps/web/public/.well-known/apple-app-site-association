@@ -1,0 +1,20 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "TEAMID.app.huddle.mobile",
+        "paths": [
+          "/plan/*",
+          "/trip/*",
+          "/recap/*"
+        ]
+      }
+    ]
+  },
+  "webcredentials": {
+    "apps": [
+      "TEAMID.app.huddle.mobile"
+    ]
+  }
+}

@@ -206,23 +206,23 @@ export const PRO_FEATURES: Record<FeatureKey, { label: string; description: stri
 // ─── Subscription Pricing ─────────────────────────────────────
 export const PRICING = {
   pro_monthly: {
-    price: 7.99,
+    price: 4.99,
     currency: 'USD',
-    label: '$7.99/month',
+    label: '$4.99/month',
     revenuecat_id: 'pro_monthly',
   },
   pro_annual: {
-    price: 49.99,
+    price: 34.99,
     currency: 'USD',
-    label: '$49.99/year',
-    per_month: 4.17,
-    savings_percent: 48,
+    label: '$34.99/year',
+    per_month: 2.92,
+    savings_percent: 42,
     revenuecat_id: 'pro_annual',
   },
   trip_pass: {
-    price: 4.99,
+    price: 9.99,
     currency: 'USD',
-    label: '$4.99 one-time',
+    label: '$9.99 one-time',
     revenuecat_id: 'trip_pass',
   },
   trial_days: 7,

@@ -15,7 +15,6 @@
     "lint": "eslint . --ext .ts,.tsx"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.32.1",
     "@expo/vector-icons": "^14.0.4",
     "@gorhom/bottom-sheet": "^4.6.4",
     "@huddle/shared": "workspace:*",
@@ -25,9 +24,10 @@
     "@supabase/supabase-js": "^2.47.2",
     "expo": "^52.0.28",
     "expo-av": "~15.0.2",
+    "expo-device": "~7.0.2",
     "expo-blur": "~14.0.3",
     "expo-camera": "~16.0.14",
-    "expo-contacts": "~13.0.6",
+    "expo-contacts": "~14.0.0",
     "expo-dev-client": "~5.0.14",
     "expo-font": "~13.0.3",
     "expo-haptics": "~14.0.1",

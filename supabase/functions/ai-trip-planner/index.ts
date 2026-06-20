@@ -182,6 +182,48 @@ Deno.serve(async (req: Request) => {
     });
   }
 
+  // ─── Auth: extract and verify JWT ────────────────────────────
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader?.startsWith('Bearer ')) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  const jwt = authHeader.slice(7);
+  const { data: { user }, error: authError } = await supabase.auth.getUser(jwt);
+
+  if (authError || !user) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  // ─── Server-side entitlement check (Trip Mode = Pro or Trip Pass) ─
+  const now = new Date().toISOString();
+  const { data: entitlements } = await supabase
+    .from('entitlements')
+    .select('feature, expires_at')
+    .eq('user_id', user.id)
+    .in('feature', ['trip_mode', 'trip_pass', 'unlimited_huddles', 'ai_suggestions']);
+
+  const hasAccess = (entitlements ?? []).some((e: any) => {
+    const notExpired = !e.expires_at || e.expires_at > now;
+    return notExpired && ['trip_mode', 'trip_pass', 'unlimited_huddles'].includes(e.feature);
+  });
+
+  if (!hasAccess) {
+    return new Response(
+      JSON.stringify({
+        error: 'Trip Mode requires Huddle Pro or a Trip Pass',
+        upgrade_required: true,
+      }),
+      { status: 403, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+
   let body: TripPlannerRequest;
   try {
     body = await req.json();
@@ -201,16 +243,32 @@ Deno.serve(async (req: Request) => {
     );
   }
 
-  // Verify trip exists
+  // Verify trip exists and user is the plan creator
   const { data: trip, error: tripError } = await supabase
     .from('trips')
-    .select('id, plan_id')
+    .select('id, plan_id, plans!inner(creator_id)')
     .eq('id', body.trip_id)
     .single();
 
   if (tripError || !trip) {
     return new Response(JSON.stringify({ error: 'Trip not found' }), {
       status: 404,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  // Verify user belongs to the plan
+  const { count: memberCount } = await supabase
+    .from('plan_invitees')
+    .select('*', { count: 'exact', head: true })
+    .eq('plan_id', trip.plan_id)
+    .eq('user_id', user.id);
+
+  const tripPlan = (trip as any).plans;
+  const isCreator = tripPlan?.creator_id === user.id;
+  if (!isCreator && (memberCount ?? 0) === 0) {
+    return new Response(JSON.stringify({ error: 'Not a member of this trip' }), {
+      status: 403,
       headers: { 'Content-Type': 'application/json' },
     });
   }

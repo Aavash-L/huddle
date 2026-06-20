@@ -1,0 +1,73 @@
+# ============================================================
+# Supabase local dev config
+# See https://supabase.com/docs/guides/cli/config
+# ============================================================
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+shadow_port = 54320
+major_version = 15
+
+[studio]
+enabled = true
+port = 54323
+
+[inbucket]
+enabled = true
+port = 54324
+smtp_port = 54325
+pop3_port = 54326
+
+[storage]
+enabled = true
+file_size_limit = "50MiB"
+
+[auth]
+enabled = true
+# Auth API port (separate from Supabase API)
+port = 54321
+# JWT secret — override in production
+jwt_secret = "super-secret-jwt-token-with-at-least-32-characters-long"
+jwt_expiry = 3600
+enable_signup = true
+enable_anonymous_sign_ins = false
+
+# Phone OTP (Twilio) — set in Supabase dashboard for hosted projects
+# For local dev, use the test OTP: 123456 for any phone number
+[auth.sms]
+max_frequency = "5s"
+# enable_signup = true
+
+# Required env vars for Edge Functions (set these in .env.local or supabase secrets)
+# SUPABASE_URL
+# SUPABASE_SERVICE_ROLE_KEY
+# ANTHROPIC_API_KEY
+
+[functions.send-reminders]
+verify_jwt = false   # Called by pg_cron with service key, not user JWT
+
+[functions.ai-suggestions]
+verify_jwt = true    # Must be called by authenticated users
+
+[functions.ai-trip-planner]
+verify_jwt = true    # Must be called by authenticated users
+
+[functions.convergence]
+verify_jwt = false   # Called by server or authenticated users
+
+[edge_runtime]
+enabled = true
+
+[analytics]
+enabled = false
+
+# ─── pg_cron schedule for send-reminders ──────────────────────
+# This is configured via SQL migration 004_cron.sql
+# The cron job calls the send-reminders Edge Function every hour.

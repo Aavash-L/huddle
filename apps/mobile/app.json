@@ -22,7 +22,11 @@
         "NSCameraUsageDescription": "Huddle needs camera access to take a profile photo."
       },
       "entitlements": {
-        "aps-environment": "production"
+        "aps-environment": "production",
+        "com.apple.developer.associated-domains": [
+          "applinks:huddle.app",
+          "applinks:www.huddle.app"
+        ]
       }
     },
     "android": {
@@ -39,6 +43,25 @@
         "android.permission.RECEIVE_BOOT_COMPLETED",
         "android.permission.VIBRATE",
         "android.permission.POST_NOTIFICATIONS"
+      ],
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "huddle.app",
+              "pathPrefix": "/plan"
+            },
+            {
+              "scheme": "https",
+              "host": "huddle.app",
+              "pathPrefix": "/trip"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
       ]
     },
     "web": {
