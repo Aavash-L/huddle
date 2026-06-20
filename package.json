@@ -1,0 +1,24 @@
+{
+  "name": "huddle",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "type-check": "turbo run type-check",
+    "mobile": "pnpm --filter @huddle/mobile start",
+    "web": "pnpm --filter @huddle/web dev",
+    "db:push": "supabase db push",
+    "db:reset": "supabase db reset",
+    "db:generate-types": "supabase gen types typescript --local > packages/shared/src/database.types.ts"
+  },
+  "devDependencies": {
+    "turbo": "^2.3.3",
+    "typescript": "^5.7.2"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  }
+}

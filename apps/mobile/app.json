@@ -1,0 +1,84 @@
+{
+  "expo": {
+    "name": "Huddle",
+    "slug": "huddle",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0F2027"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "app.huddle.mobile",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSContactsUsageDescription": "Huddle uses your contacts to find friends who already use the app, so you can invite them to plans faster.",
+        "NSPhotoLibraryUsageDescription": "Huddle needs access to your photos to set your profile picture.",
+        "NSCameraUsageDescription": "Huddle needs camera access to take a profile photo."
+      },
+      "entitlements": {
+        "aps-environment": "production"
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0F2027"
+      },
+      "package": "app.huddle.mobile",
+      "versionCode": 1,
+      "permissions": [
+        "android.permission.READ_CONTACTS",
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.VIBRATE",
+        "android.permission.POST_NOTIFICATIONS"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#667EEA",
+          "defaultChannel": "default",
+          "sounds": ["./assets/sounds/notification.wav"]
+        }
+      ],
+      [
+        "expo-contacts",
+        {
+          "contactsPermission": "Huddle uses your contacts to find friends who already use the app."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Huddle needs access to your photos to set your profile picture."
+        }
+      ],
+      "expo-secure-store"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "scheme": "huddle",
+    "extra": {
+      "eas": {
+        "projectId": "your-eas-project-id-here"
+      }
+    }
+  }
+}
