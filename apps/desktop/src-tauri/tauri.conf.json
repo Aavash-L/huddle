@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "identifier": "app.huddle.desktop",
   "build": {
-    "frontendDist": "../mobile/dist"
+    "frontendDist": "../../mobile/dist"
   },
   "app": {
     "windows": [
@@ -43,14 +43,6 @@
       "wix": {
         "language": "en-US"
       }
-    },
-    "updater": {
-      "active": true,
-      "endpoints": [
-        "https://github.com/yourusername/huddle/releases/latest/download/latest.json"
-      ],
-      "dialog": true,
-      "pubkey": ""
     }
   },
   "plugins": {
@@ -60,12 +52,6 @@
       "desktop": {
         "schemes": ["huddle"]
       }
-    },
-    "updater": {
-      "pubkey": "",
-      "endpoints": [
-        "https://github.com/yourusername/huddle/releases/latest/download/latest.json"
-      ]
     },
     "single-instance": {},
     "window-state": {}

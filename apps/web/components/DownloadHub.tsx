@@ -86,6 +86,8 @@ export default function DownloadHub() {
             url={PLATFORMS.mac.url}
             enabled={PLATFORMS.mac.enabled}
             platform="mac"
+            badge={PLATFORMS.mac.enabled ? 'beta' : undefined}
+            gatekeeperNote={PLATFORMS.mac.enabled}
           />
 
           {/* Desktop — Windows */}

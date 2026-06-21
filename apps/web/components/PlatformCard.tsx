@@ -21,6 +21,8 @@ export default function PlatformCard({
   url,
   enabled,
   platform,
+  badge,
+  gatekeeperNote,
 }: {
   icon: ReactNode;
   title: string;
@@ -28,6 +30,8 @@ export default function PlatformCard({
   url: string;
   enabled: boolean;
   platform: string;
+  badge?: string;
+  gatekeeperNote?: boolean;
 }) {
   const [showCapture, setShowCapture] = useState(false);
   const [email, setEmail] = useState('');
@@ -55,9 +59,16 @@ export default function PlatformCard({
         <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#1A2230] text-[#F4F6FB]">
           {icon}
         </div>
-        <div>
-          <div className="font-bold text-[#F4F6FB]" style={{ fontFamily: 'var(--font-display)' }}>
-            {title}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <span className="font-bold text-[#F4F6FB]" style={{ fontFamily: 'var(--font-display)' }}>
+              {title}
+            </span>
+            {badge && (
+              <span className="rounded-full bg-[#F5B544]/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#F5B544]">
+                {badge}
+              </span>
+            )}
           </div>
           <div className="text-xs text-[#9AA6B8]">{sublabel}</div>
         </div>
@@ -65,13 +76,28 @@ export default function PlatformCard({
 
       <div className="mt-5">
         {enabled && url ? (
-          <a
-            href={url}
-            onClick={() => track('cta_click', platform, { url })}
-            className="inline-flex w-full items-center justify-center rounded-[14px] bg-[#F4F6FB] px-5 py-3 text-sm font-bold text-[#0A0E14] transition-transform active:scale-95"
-          >
-            {title}
-          </a>
+          <>
+            <a
+              href={url}
+              onClick={() => track('cta_click', platform, { url })}
+              className="inline-flex w-full items-center justify-center rounded-[14px] bg-[#F4F6FB] px-5 py-3 text-sm font-bold text-[#0A0E14] transition-transform active:scale-95"
+            >
+              {title}
+            </a>
+            {gatekeeperNote && (
+              <p className="mt-2 text-center text-[11px] text-[#9AA6B8]">
+                Unsigned beta —{' '}
+                <a
+                  href="https://support.apple.com/en-us/102445"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline underline-offset-2 hover:text-[#F5B544]"
+                >
+                  Trouble opening?
+                </a>
+              </p>
+            )}
+          </>
         ) : status === 'done' ? (
           <div className="rounded-[14px] bg-[rgba(123,216,143,0.12)] px-4 py-3 text-center text-sm font-semibold text-[#7BD88F]">
             You&rsquo;re on the list! 🎉
