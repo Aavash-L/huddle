@@ -7,7 +7,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
@@ -26,6 +25,7 @@ function formatPhoneDisplay(raw: string): string {
 export default function PhoneScreen() {
   const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
   const { sendOTP } = useAuth();
 
   const digits = phone.replace(/\D/g, '');
@@ -40,13 +40,14 @@ export default function PhoneScreen() {
     if (!isValid || loading) return;
 
     setLoading(true);
+    setErrorMsg('');
     track('phone_entered', { length: digits.length });
 
     const { error } = await sendOTP(digits);
     setLoading(false);
 
     if (error) {
-      Alert.alert('Error', error || 'Failed to send code. Please try again.');
+      setErrorMsg(error);
       return;
     }
 
@@ -100,6 +101,12 @@ export default function PhoneScreen() {
             <Text className="text-white/40 text-sm mb-10">
               US numbers only for now. International coming soon.
             </Text>
+
+            {errorMsg ? (
+              <View className="bg-red-500/20 border border-red-500/40 rounded-xl px-4 py-3 mb-4">
+                <Text className="text-red-300 text-sm">{errorMsg}</Text>
+              </View>
+            ) : null}
 
             <TouchableOpacity
               onPress={handleContinue}
