@@ -8,7 +8,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
@@ -38,6 +37,7 @@ export default function NewPlanScreen() {
   const [selectedPhones, setSelectedPhones] = useState<string[]>([]);
   const [newPhone, setNewPhone] = useState('');
   const [saving, setSaving] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
   const { user, session } = useAuth();
   const { isPro } = usePro();
@@ -87,6 +87,7 @@ export default function NewPlanScreen() {
 
     setSaving(true);
 
+    setErrorMsg('');
     try {
       // Create plan
       const { data: plan, error: planError } = await supabase
@@ -135,7 +136,7 @@ export default function NewPlanScreen() {
 
       router.replace(`/(app)/plan/${plan.id}`);
     } catch (err: any) {
-      Alert.alert('Error', err.message ?? 'Failed to create plan');
+      setErrorMsg(err.message ?? 'Failed to create plan');
     } finally {
       setSaving(false);
     }
@@ -363,6 +364,11 @@ export default function NewPlanScreen() {
       {/* Create button (only on last step) */}
       {step === 'people' && (
         <View className="px-4 pb-10 pt-3 bg-[#0F1117]">
+          {errorMsg ? (
+            <View className="bg-red-500/20 border border-red-500/40 rounded-xl px-4 py-3 mb-3">
+              <Text className="text-red-300 text-sm">{errorMsg}</Text>
+            </View>
+          ) : null}
           <TouchableOpacity
             onPress={handleCreate}
             disabled={saving}
