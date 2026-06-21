@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, Dimensions, ImageBackground } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -12,8 +12,6 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 import { useEffect } from 'react';
-
-const { width, height } = Dimensions.get('window');
 
 const TAGLINE = "Plans go to die in the group chat.";
 const TAGLINE_2 = "Huddle is where they actually happen.";
@@ -46,8 +44,8 @@ function FloatingEmoji({ emoji, delay, x, y }: { emoji: string; delay: number; x
         style,
         {
           position: 'absolute',
-          left: x * width,
-          top: y * height,
+          left: `${x * 100}%` as any,
+          top: `${y * 100}%` as any,
           fontSize: 32,
           zIndex: 0,
         },
@@ -60,7 +58,7 @@ function FloatingEmoji({ emoji, delay, x, y }: { emoji: string; delay: number; x
 
 export default function WelcomeScreen() {
   return (
-    <View className="flex-1 bg-[#0F2027]">
+    <View className="flex-1 bg-[#0F2027] overflow-hidden">
       <StatusBar style="light" />
 
       <LinearGradient
