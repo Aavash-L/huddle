@@ -11,6 +11,7 @@
     "prebuild": "expo prebuild",
     "build:ios": "eas build --platform ios",
     "build:android": "eas build --platform android",
+    "export:web": "expo export --platform web",
     "type-check": "tsc --noEmit",
     "lint": "eslint . --ext .ts,.tsx"
   },
@@ -54,7 +55,9 @@
     "react-native-svg": "15.8.0",
     "react-native-url-polyfill": "^2.0.0",
     "tailwind-merge": "^2.6.0",
-    "zustand": "^5.0.2"
+    "zustand": "^5.0.2",
+    "@expo/metro-runtime": "~4.0.1",
+    "react-native-web": "~0.19.13"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

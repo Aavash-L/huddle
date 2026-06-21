@@ -1,0 +1,18 @@
+{
+  "$schema": "https://schema.tauri.app/schema/capability/2",
+  "identifier": "default",
+  "description": "Huddle Desktop default permissions",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "notification:default",
+    "deep-link:default",
+    "updater:check",
+    "updater:download",
+    "updater:install",
+    "shell:allow-open",
+    "single-instance:allow",
+    "window-state:allow-restore-state",
+    "window-state:allow-save-window-state"
+  ]
+}

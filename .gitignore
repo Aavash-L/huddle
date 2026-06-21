@@ -46,3 +46,8 @@ pnpm-debug.log*
 
 # Turbo
 .turbo/
+.claude/worktrees/
+# Claude Code worktrees
+.claude/worktrees/
+# Rust build artifacts
+apps/desktop/src-tauri/target/

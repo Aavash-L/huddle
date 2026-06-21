@@ -50,7 +50,7 @@ export default function BailScreen() {
           onPress: async () => {
             setSubmitting(true);
             const reason = customReason.trim() ||
-              BAIL_REASONS.find((r) => r.id === selectedReason)?.label ?? 'Something came up';
+              (BAIL_REASONS.find((r) => r.id === selectedReason)?.label ?? 'Something came up');
 
             const { error } = await submitCommitment('out', reason);
             setSubmitting(false);

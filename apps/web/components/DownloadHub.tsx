@@ -18,6 +18,22 @@ function AndroidIcon() {
   );
 }
 
+function MacIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V6h16v12zM6 10h2v2H6zm0 3h2v2H6zm3-3h9v2H9zm0 3h6v2H9z" />
+    </svg>
+  );
+}
+
+function WindowsIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <path d="M3 5.6L10.5 4.5V11.5H3V5.6ZM11.5 4.35L21 3V11.5H11.5V4.35ZM3 12.5H10.5V19.5L3 18.4V12.5ZM11.5 12.5H21V21L11.5 19.65V12.5Z" />
+    </svg>
+  );
+}
+
 function GlobeIcon() {
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
@@ -39,8 +55,12 @@ export default function DownloadHub() {
         >
           Get Huddle on every device
         </h2>
+        <p className="mt-3 text-center text-sm text-[#9AA6B8]">
+          iPhone · Android · Mac · Windows · any browser
+        </p>
 
-        <div className="mt-12 grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="mt-12 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {/* Mobile */}
           <PlatformCard
             icon={<AppleIcon />}
             title="Download for iPhone"
@@ -57,24 +77,36 @@ export default function DownloadHub() {
             enabled={PLATFORMS.android.enabled}
             platform="android"
           />
+
+          {/* Desktop — Mac */}
           <PlatformCard
-            icon={<AppleIcon />}
-            title="Also on Mac"
-            sublabel="Runs on Apple Silicon via iPad"
+            icon={<MacIcon />}
+            title="Download for Mac"
+            sublabel="Apple Silicon + Intel · macOS 10.15+"
             url={PLATFORMS.mac.url}
             enabled={PLATFORMS.mac.enabled}
             platform="mac"
           />
 
-          {/* Web card — link if set, else a Coming soon notice */}
-          <div className="flex flex-col rounded-[22px] border border-[rgba(255,255,255,0.08)] bg-[#121823] p-6">
+          {/* Desktop — Windows */}
+          <PlatformCard
+            icon={<WindowsIcon />}
+            title="Download for Windows"
+            sublabel="Windows 10+"
+            url={PLATFORMS.windows.url}
+            enabled={PLATFORMS.windows.enabled}
+            platform="windows"
+          />
+
+          {/* Web app */}
+          <div className="flex flex-col rounded-[22px] border border-[rgba(255,255,255,0.08)] bg-[#121823] p-6 sm:col-span-2 lg:col-span-1">
             <div className="flex items-center gap-3">
               <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#1A2230] text-[#F4F6FB]">
                 <GlobeIcon />
               </div>
               <div>
                 <div className="font-bold text-[#F4F6FB]" style={{ fontFamily: 'var(--font-display)' }}>
-                  Use Huddle on the web
+                  Open Huddle on the web
                 </div>
                 <div className="text-xs text-[#9AA6B8]">Any browser, any device</div>
               </div>
@@ -89,7 +121,7 @@ export default function DownloadHub() {
                 </a>
               ) : (
                 <div className="rounded-[14px] border border-[rgba(255,255,255,0.10)] bg-[#1A2230] px-4 py-3 text-center text-sm font-semibold text-[#9AA6B8]">
-                  Coming soon
+                  Web app — coming soon
                 </div>
               )}
             </div>
@@ -100,12 +132,12 @@ export default function DownloadHub() {
         <div className="mt-10 hidden justify-center md:flex">
           <div className="flex items-center gap-6 rounded-[22px] border border-[rgba(255,255,255,0.08)] bg-[#121823] p-6">
             <QRCode value={qrValue} size={140} />
-            <div className="max-w-[220px]">
+            <div className="max-w-[240px]">
               <div className="font-semibold text-[#F4F6FB]">
                 On your computer? Scan to get Huddle on your phone.
               </div>
               <div className="mt-2 text-sm text-[#9AA6B8]">
-                Works for iPhone and Android.
+                Works for iPhone and Android. Takes 30 seconds.
               </div>
             </div>
           </div>

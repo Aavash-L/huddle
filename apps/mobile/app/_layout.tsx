@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
+import { Platform } from 'react-native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
-import * as Notifications from 'expo-notifications';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useRouter } from 'expo-router';
 
@@ -23,14 +23,18 @@ function RootLayoutNav() {
     }
   }, [loading]);
 
-  // Handle notification taps — deep link to relevant plan
+  // Handle notification taps — deep link to relevant plan (native only)
   useEffect(() => {
-    const subscription = Notifications.addNotificationResponseReceivedListener((response) => {
-      const data = response.notification.request.content.data as Record<string, string>;
-      if (data?.planId) {
-        router.push(`/(app)/plan/${data.planId}`);
+    if (Platform.OS === 'web') return;
+    const Notifications = require('expo-notifications');
+    const subscription = Notifications.addNotificationResponseReceivedListener(
+      (response: { notification: { request: { content: { data: Record<string, string> } } } }) => {
+        const data = response.notification.request.content.data;
+        if (data?.planId) {
+          router.push(`/(app)/plan/${data.planId}`);
+        }
       }
-    });
+    );
     return () => subscription.remove();
   }, [router]);
 
@@ -46,9 +50,10 @@ function RootLayoutNav() {
 
 export default function RootLayout() {
   useEffect(() => {
-    // Initialize services
     initPostHog().catch(console.error);
-    initRevenueCat().catch(console.error);
+    if (Platform.OS !== 'web') {
+      initRevenueCat().catch(console.error);
+    }
   }, []);
 
   return (

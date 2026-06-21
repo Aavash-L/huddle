@@ -7,10 +7,14 @@ export interface PlatformConfig {
 
 const IOS_URL = process.env.NEXT_PUBLIC_IOS_URL ?? '';
 const ANDROID_URL = process.env.NEXT_PUBLIC_ANDROID_URL ?? '';
-const MAC_URL = process.env.NEXT_PUBLIC_MAC_URL ?? '';
+// Mac: GitHub Release .dmg (universal Apple Silicon + Intel)
+const MAC_DMG_URL = process.env.NEXT_PUBLIC_MAC_DMG_URL ?? '';
+// Windows: GitHub Release .msi/.exe
+const WINDOWS_URL = process.env.NEXT_PUBLIC_WINDOWS_URL ?? '';
+// Web app: deployed Expo web PWA (separate Vercel project)
 const WEB_APP_URL = process.env.NEXT_PUBLIC_WEB_APP_URL ?? '';
 
-export const PLATFORMS: Record<'ios' | 'android' | 'mac' | 'web', PlatformConfig> = {
+export const PLATFORMS: Record<'ios' | 'android' | 'mac' | 'windows' | 'web', PlatformConfig> = {
   ios: {
     url: IOS_URL,
     enabled: IOS_URL.length > 0,
@@ -24,15 +28,21 @@ export const PLATFORMS: Record<'ios' | 'android' | 'mac' | 'web', PlatformConfig
     sublabel: 'Android 8+',
   },
   mac: {
-    url: MAC_URL,
-    enabled: MAC_URL.length > 0,
-    label: 'Also on Mac',
-    sublabel: 'Runs on Apple Silicon via iPad',
+    url: MAC_DMG_URL,
+    enabled: MAC_DMG_URL.length > 0,
+    label: 'Download for Mac',
+    sublabel: 'Apple Silicon + Intel · macOS 10.15+',
+  },
+  windows: {
+    url: WINDOWS_URL,
+    enabled: WINDOWS_URL.length > 0,
+    label: 'Download for Windows',
+    sublabel: 'Windows 10+',
   },
   web: {
     url: WEB_APP_URL,
     enabled: WEB_APP_URL.length > 0,
-    label: 'Use Huddle on the web',
+    label: 'Open Huddle on the web',
     sublabel: 'Any browser, any device',
   },
 };

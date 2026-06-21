@@ -2,11 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
-function detectPlatform(ua: string): 'ios' | 'android' | 'mac' | 'other' {
+type Platform = 'ios' | 'android' | 'mac' | 'windows' | 'other';
+
+function detectPlatform(ua: string): Platform {
   const u = ua.toLowerCase();
   if (/iphone|ipad|ipod/.test(u)) return 'ios';
   if (/android/.test(u)) return 'android';
-  if (/macintosh|mac os x/.test(u)) return 'mac';
+  // macOS: "Macintosh" appears in desktop Safari/Chrome UA; exclude "iphone" already handled
+  if (/macintosh|mac os x/.test(u) && !/windows/.test(u)) return 'mac';
+  if (/windows nt|win64|win32/.test(u)) return 'windows';
   return 'other';
 }
 
@@ -16,7 +20,8 @@ export function GET(request: NextRequest) {
 
   const iosUrl = process.env.NEXT_PUBLIC_IOS_URL ?? '';
   const androidUrl = process.env.NEXT_PUBLIC_ANDROID_URL ?? '';
-  const macUrl = process.env.NEXT_PUBLIC_MAC_URL ?? '';
+  const macUrl = process.env.NEXT_PUBLIC_MAC_DMG_URL ?? '';
+  const windowsUrl = process.env.NEXT_PUBLIC_WINDOWS_URL ?? '';
   const webUrl = process.env.NEXT_PUBLIC_WEB_APP_URL ?? '';
 
   let target: string;
@@ -28,7 +33,11 @@ export function GET(request: NextRequest) {
       target = androidUrl || webUrl || '/';
       break;
     case 'mac':
-      target = macUrl || iosUrl || '/';
+      // Mac visitors: prefer the .dmg; fall back to web app, then marketing site
+      target = macUrl || webUrl || '/';
+      break;
+    case 'windows':
+      target = windowsUrl || webUrl || '/';
       break;
     default:
       target = webUrl || '/';
@@ -47,7 +56,6 @@ export function GET(request: NextRequest) {
     return NextResponse.redirect(url.toString(), 302);
   }
 
-  // Relative target — resolve against the current origin.
   const url = new URL(target, request.nextUrl.origin);
   incoming.forEach((value, key) => {
     if (!url.searchParams.has(key)) url.searchParams.set(key, value);
