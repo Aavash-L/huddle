@@ -18,10 +18,11 @@ pub fn run() {
         .plugin(tauri_plugin_window_state::Builder::new().build())
         .setup(|app| {
             // Register deep-link handler: huddle://plan/xxx
+            // Non-fatal: unsigned builds may not have URL scheme in Info.plist
             #[cfg(desktop)]
             {
                 use tauri_plugin_deep_link::DeepLinkExt;
-                app.deep_link().register_all()?;
+                let _ = app.deep_link().register_all();
             }
             Ok(())
         })
