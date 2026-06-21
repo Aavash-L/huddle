@@ -1,6 +1,6 @@
 {
   "framework": "nextjs",
-  "installCommand": "npm i -g pnpm@9.15.4 && pnpm install --filter \"@huddle/web...\"",
+  "installCommand": "npx --yes pnpm@9.15.4 install --filter \"@huddle/web...\"",
   "buildCommand": "pnpm --filter @huddle/web build",
   "outputDirectory": "apps/web/.next"
 }
