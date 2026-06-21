@@ -1,34 +1,54 @@
 @import "tailwindcss";
 
-:root {
-  --color-brand-from: #667EEA;
-  --color-brand-to: #764BA2;
+@theme {
+  --font-display: 'Bricolage Grotesque', 'Space Grotesk', ui-sans-serif;
+  --font-body: 'Inter', ui-sans-serif;
+  --color-canvas: #0A0E14;
+  --color-surface: #121823;
+  --color-surface-2: #1A2230;
+  --color-accent: #F5B544;
+  --color-accent-dim: rgba(245,181,68,0.12);
+  --color-fg: #F4F6FB;
+  --color-muted: #9AA6B8;
+  --color-border: rgba(255,255,255,0.08);
+  --radius-card: 22px;
+  --radius-btn: 14px;
 }
 
-/* Mobile-first base styles */
+:root {
+  --bg: #0A0E14;
+  --accent: #F5B544;
+}
+
 * {
   -webkit-tap-highlight-color: transparent;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  background: #0A0E14;
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #0A0E14;
+  color: #F4F6FB;
+  font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
 }
 
-/* Touch-friendly active states */
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+}
+
 button, a {
   touch-action: manipulation;
 }
 
-/* Smooth scrolling */
-html {
-  scroll-behavior: smooth;
-}
-
-/* Gradient text utility */
-.gradient-text {
-  background: linear-gradient(135deg, #667EEA, #764BA2);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
