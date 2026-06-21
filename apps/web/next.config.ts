@@ -1,9 +1,13 @@
+import path from 'path';
 import type { NextConfig } from 'next';
 
 const config: NextConfig = {
   transpilePackages: ['@huddle/shared'],
-  serverActions: {
-    allowedOrigins: ['localhost:3000', 'huddle.app', '*.vercel.app'],
+  outputFileTracingRoot: path.join(__dirname, '../..'),
+  experimental: {
+    serverActions: {
+      allowedOrigins: ['localhost:3000', 'huddle.app', '*.vercel.app'],
+    },
   },
   async headers() {
     return [
@@ -16,7 +20,6 @@ const config: NextConfig = {
         ],
       },
       {
-        // AASA must be served as application/json with no extension
         source: '/.well-known/apple-app-site-association',
         headers: [
           { key: 'Content-Type', value: 'application/json' },

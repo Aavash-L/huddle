@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { resolveResponseToken, fetchPlanForToken } from '@/lib/supabase';
@@ -119,7 +121,7 @@ export default async function PlanTokenPage({ params }: PageProps) {
       {/* RSVP Section — client component */}
       <div className="flex-1 px-5 py-8 max-w-lg mx-auto w-full">
         <RSVPSection
-          planId={plan.plan_id ?? plan.id}
+          planId={plan.id}
           responseToken={token}
           planStatus={plan.status}
           existingAvailability={(plan.availability as any[]) ?? []}

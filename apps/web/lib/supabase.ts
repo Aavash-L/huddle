@@ -1,25 +1,64 @@
-import { createClient } from '@supabase/supabase-js';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+let _client: SupabaseClient<any> | undefined;
 
-// Standard client for server components and API routes
-export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-// Client factory for use with response_token (no-account web flow)
-// The response_token is passed as a custom header so RLS policies can identify the web responder
-export function createTokenClient(responseToken: string) {
-  return createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    global: {
-      headers: {
-        'x-response-token': responseToken,
-      },
-    },
-  });
+function getClient(): SupabaseClient<any> {
+  if (!_client) {
+    _client = createClient<any>(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+  }
+  return _client;
 }
 
-// Resolve a response_token to its plan_invitee row
-export async function resolveResponseToken(token: string) {
+// Lazy proxy — real client is created on first property access (request time),
+// never at module import time, so the build never throws on missing env vars.
+export const supabase = new Proxy({} as SupabaseClient<any>, {
+  get(_, prop: string | symbol): any {
+    const client = getClient();
+    const val = (client as any)[prop];
+    return typeof val === 'function' ? val.bind(client) : val;
+  },
+}) as SupabaseClient<any>;
+
+export function createTokenClient(responseToken: string): SupabaseClient<any> {
+  return createClient<any>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      global: {
+        headers: { 'x-response-token': responseToken },
+      },
+    }
+  );
+}
+
+export interface PlanInviteeRow {
+  plan_id: string;
+  user_id: string | null;
+  phone: string | null;
+  invited_at: string;
+}
+
+export interface PlanRow {
+  id: string;
+  title: string;
+  type: string | null;
+  theme: string | null;
+  status: string;
+  locked_datetime: string | null;
+  location: string | null;
+  activity: string | null;
+  quorum_n: number;
+  creator: { id: string; name: string; avatar_url: string | null }[];
+  plan_invitees: { user_id: string | null; phone: string | null }[];
+  commitments: { user_id: string | null; status: string }[];
+  availability: { user_id: string | null; response_token: string | null; time_window: any; available: boolean }[];
+}
+
+export async function resolveResponseToken(token: string): Promise<PlanInviteeRow | null> {
   const { data, error } = await supabase
     .from('plan_invitees')
     .select('plan_id, user_id, phone, invited_at')
@@ -27,11 +66,10 @@ export async function resolveResponseToken(token: string) {
     .single();
 
   if (error || !data) return null;
-  return data;
+  return data as PlanInviteeRow;
 }
 
-// Fetch plan data viewable by a response_token holder
-export async function fetchPlanForToken(planId: string, token: string) {
+export async function fetchPlanForToken(planId: string, token: string): Promise<PlanRow | null> {
   const client = createTokenClient(token);
 
   const { data, error } = await client
@@ -55,5 +93,5 @@ export async function fetchPlanForToken(planId: string, token: string) {
     .single();
 
   if (error) return null;
-  return data;
+  return data as PlanRow;
 }

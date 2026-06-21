@@ -1,0 +1,4 @@
+{
+  "installCommand": "cd ../.. && npx --yes pnpm@9.15.4 install",
+  "buildCommand": "next build"
+}
