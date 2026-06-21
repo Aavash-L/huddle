@@ -14,7 +14,7 @@ const QUESTIONS = [
   },
   {
     q: 'What platforms is Huddle on?',
-    a: 'iPhone and Android (primary). The iPhone app also runs on Apple Silicon Macs. A web app is coming soon for Windows, Linux, and Chromebook users.',
+    a: 'iPhone and Android (primary), plus a native Mac app (Apple Silicon + Intel, macOS 10.15+). A web app is in the works for Windows, Linux, and Chromebook users.',
   },
   {
     q: 'How is this different from just using our group chat?',
@@ -22,7 +22,7 @@ const QUESTIONS = [
   },
   {
     q: 'What about Windows?',
-    a: "No native Windows app yet — Huddle is built for mobile first. We're working on a web app that'll work on any desktop browser. Sign up on the waitlist and we'll let you know when it's ready.",
+    a: "Mac users can download the native app now (beta). No native Windows app yet — sign up for the waitlist and we'll let you know when it's ready. In the meantime, the web app will work in any browser.",
   },
   {
     q: 'How does Trip Mode work?',

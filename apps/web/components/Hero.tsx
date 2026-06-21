@@ -5,13 +5,14 @@ import { PLATFORMS, SITE_URL } from '@/config/platforms';
 import DeviceMockup from './DeviceMockup';
 import QRCode from './QRCode';
 
-type OS = 'ios' | 'android' | 'desktop';
+type OS = 'ios' | 'android' | 'mac' | 'desktop';
 
 function detectOS(): OS {
   if (typeof navigator === 'undefined') return 'desktop';
   const ua = navigator.userAgent.toLowerCase();
   if (/iphone|ipad|ipod/.test(ua)) return 'ios';
   if (/android/.test(ua)) return 'android';
+  if (/macintosh|mac os x/.test(ua)) return 'mac';
   return 'desktop';
 }
 
@@ -89,28 +90,42 @@ export default function Hero() {
               </a>
             )}
 
-            {os === 'desktop' && (
-              <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-                <div className="flex items-center gap-4 rounded-[22px] border border-[rgba(255,255,255,0.08)] bg-[#121823] p-4">
-                  <QRCode value={qrValue} size={104} />
-                  <div className="max-w-[140px]">
-                    <div className="text-sm font-semibold text-[#F4F6FB]">
-                      Scan to get the app
-                    </div>
-                    <div className="mt-1 text-xs text-[#9AA6B8]">
-                      Works for iPhone and Android.
+            {(os === 'desktop' || os === 'mac') && (
+              <div className="flex flex-col gap-4">
+                {os === 'mac' && PLATFORMS.mac.enabled && (
+                  <div className="flex flex-wrap items-center gap-3">
+                    <a
+                      href={PLATFORMS.mac.url}
+                      className={primaryBtn}
+                      onClick={() => track('mac', PLATFORMS.mac.url)}
+                    >
+                      Download for Mac
+                    </a>
+                    <span className="text-xs text-[#9AA6B8]">Apple Silicon + Intel</span>
+                  </div>
+                )}
+                <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
+                  <div className="flex items-center gap-4 rounded-[22px] border border-[rgba(255,255,255,0.08)] bg-[#121823] p-4">
+                    <QRCode value={qrValue} size={104} />
+                    <div className="max-w-[140px]">
+                      <div className="text-sm font-semibold text-[#F4F6FB]">
+                        Scan to get the app
+                      </div>
+                      <div className="mt-1 text-xs text-[#9AA6B8]">
+                        Works for iPhone and Android.
+                      </div>
                     </div>
                   </div>
+                  {PLATFORMS.web.enabled && (
+                    <a
+                      href={PLATFORMS.web.url}
+                      className={secondaryBtn}
+                      onClick={() => track('web', PLATFORMS.web.url)}
+                    >
+                      Open web app
+                    </a>
+                  )}
                 </div>
-                {PLATFORMS.web.enabled && (
-                  <a
-                    href={PLATFORMS.web.url}
-                    className={secondaryBtn}
-                    onClick={() => track('web', PLATFORMS.web.url)}
-                  >
-                    Open web app
-                  </a>
-                )}
               </div>
             )}
           </div>

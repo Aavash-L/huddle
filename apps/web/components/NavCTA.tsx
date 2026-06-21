@@ -3,13 +3,14 @@
 import { useEffect, useState } from 'react';
 import { PLATFORMS } from '@/config/platforms';
 
-type OS = 'ios' | 'android' | 'desktop';
+type OS = 'ios' | 'android' | 'mac' | 'desktop';
 
 function detectOS(): OS {
   if (typeof navigator === 'undefined') return 'desktop';
   const ua = navigator.userAgent.toLowerCase();
   if (/iphone|ipad|ipod/.test(ua)) return 'ios';
   if (/android/.test(ua)) return 'android';
+  if (/macintosh|mac os x/.test(ua)) return 'mac';
   return 'desktop';
 }
 
@@ -36,11 +37,7 @@ export default function NavCTA() {
   if (os === 'ios') {
     const url = PLATFORMS.ios.enabled ? PLATFORMS.ios.url : '#download';
     return (
-      <a
-        href={url}
-        className={pill}
-        onClick={() => track('ios', url)}
-      >
+      <a href={url} className={pill} onClick={() => track('ios', url)}>
         Get for iPhone
       </a>
     );
@@ -49,12 +46,16 @@ export default function NavCTA() {
   if (os === 'android') {
     const url = PLATFORMS.android.enabled ? PLATFORMS.android.url : '#download';
     return (
-      <a
-        href={url}
-        className={pill}
-        onClick={() => track('android', url)}
-      >
+      <a href={url} className={pill} onClick={() => track('android', url)}>
         Get for Android
+      </a>
+    );
+  }
+
+  if (os === 'mac' && PLATFORMS.mac.enabled) {
+    return (
+      <a href={PLATFORMS.mac.url} className={pill} onClick={() => track('mac', PLATFORMS.mac.url)}>
+        Download for Mac
       </a>
     );
   }
