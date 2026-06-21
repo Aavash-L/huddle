@@ -3,8 +3,12 @@
   "compilerOptions": {
     "strict": true,
     "paths": {
-      "@/*": ["./*"],
-      "@huddle/shared": ["../../packages/shared/src/index.ts"]
+      "@/*": [
+        "./*"
+      ],
+      "@huddle/shared": [
+        "../../packages/shared/src/index.ts"
+      ]
     },
     "jsx": "react-native",
     "moduleResolution": "bundler",
@@ -15,6 +19,7 @@
     "**/*.ts",
     "**/*.tsx",
     ".expo/types/**/*.d.ts",
-    "expo-env.d.ts"
+    "expo-env.d.ts",
+    "nativewind-env.d.ts"
   ]
 }

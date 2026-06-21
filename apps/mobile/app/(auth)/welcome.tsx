@@ -12,6 +12,8 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 import { useEffect } from 'react';
+import { useBreakpoint } from '@/hooks/useBreakpoint';
+import DesktopWelcome from '@/components/desktop/DesktopWelcome';
 
 const TAGLINE = "Plans go to die in the group chat.";
 const TAGLINE_2 = "Huddle is where they actually happen.";
@@ -57,6 +59,9 @@ function FloatingEmoji({ emoji, delay, x, y }: { emoji: string; delay: number; x
 }
 
 export default function WelcomeScreen() {
+  const { isDesktop } = useBreakpoint();
+  if (isDesktop) return <DesktopWelcome />;
+
   return (
     <View className="flex-1 bg-[#0F2027] overflow-hidden">
       <StatusBar style="light" />

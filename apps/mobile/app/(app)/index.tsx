@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
-  FlatList,
   TouchableOpacity,
   RefreshControl,
   ScrollView,
@@ -13,6 +12,8 @@ import { router } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
+import { useBreakpoint } from '@/hooks/useBreakpoint';
+import DesktopHome from '@/components/desktop/DesktopHome';
 import PlanCard from '@/components/PlanCard';
 import type { Plan, PlanStatus } from '@huddle/shared';
 import { PLAN_STATUSES } from '@huddle/shared';
@@ -41,7 +42,7 @@ function SectionHeader({ status, count }: { status: PlanStatus; count: number })
   );
 }
 
-export default function HomeScreen() {
+function MobileHome() {
   const { user } = useAuth();
   const [plans, setPlans] = useState<PlanWithMeta[]>([]);
   const [loading, setLoading] = useState(true);
@@ -95,14 +96,12 @@ export default function HomeScreen() {
     setRefreshing(false);
   };
 
-  // Group by status
   const grouped = STATUS_ORDER.reduce((acc, status) => {
     const group = plans.filter((p) => p.status === status);
     if (group.length > 0) acc.push({ status, plans: group });
     return acc;
   }, [] as { status: PlanStatus; plans: PlanWithMeta[] }[]);
 
-  // Next locked plan for pinned card
   const nextLockedPlan = plans
     .filter((p) => p.status === 'locked' && p.locked_datetime)
     .sort((a, b) =>
@@ -122,7 +121,6 @@ export default function HomeScreen() {
         }
         contentContainerStyle={{ paddingBottom: 100 }}
       >
-        {/* Header */}
         <LinearGradient
           colors={['#0F2027', '#203A43']}
           className="pt-14 pb-6 px-4"
@@ -135,7 +133,6 @@ export default function HomeScreen() {
           </Text>
         </LinearGradient>
 
-        {/* Pinned: Next locked plan */}
         {nextLockedPlan && (
           <Animated.View entering={FadeInDown.springify()} className="mx-4 mt-4 mb-2">
             <Text className="text-white/50 text-xs font-semibold uppercase tracking-wider mb-2">
@@ -152,7 +149,6 @@ export default function HomeScreen() {
           </Animated.View>
         )}
 
-        {/* Empty state */}
         {isEmpty && (
           <Animated.View entering={FadeInDown.delay(200).springify()} className="items-center px-6 py-16">
             <Text className="text-6xl mb-4">🤷</Text>
@@ -165,7 +161,6 @@ export default function HomeScreen() {
           </Animated.View>
         )}
 
-        {/* Grouped plan lists */}
         {grouped.map(({ status, plans: groupPlans }) => (
           <View key={status} className="mt-4">
             <SectionHeader status={status} count={groupPlans.length} />
@@ -188,7 +183,7 @@ export default function HomeScreen() {
         ))}
       </ScrollView>
 
-      {/* FAB: New Huddle */}
+      {/* FAB */}
       <View className="absolute bottom-24 right-5">
         <TouchableOpacity
           onPress={() => router.push('/(app)/plan/new')}
@@ -207,4 +202,10 @@ export default function HomeScreen() {
       </View>
     </View>
   );
+}
+
+export default function HomeScreen() {
+  const { isDesktop } = useBreakpoint();
+  if (isDesktop) return <DesktopHome />;
+  return <MobileHome />;
 }

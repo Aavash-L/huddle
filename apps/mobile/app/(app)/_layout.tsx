@@ -1,6 +1,8 @@
 import { Tabs, Redirect } from 'expo-router';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { useAuth } from '@/hooks/useAuth';
+import { useBreakpoint } from '@/hooks/useBreakpoint';
+import DesktopShell from '@/components/desktop/DesktopShell';
 
 function TabIcon({ emoji, label, focused }: { emoji: string; label: string; focused: boolean }) {
   return (
@@ -21,11 +23,16 @@ function TabIcon({ emoji, label, focused }: { emoji: string; label: string; focu
 
 export default function AppLayout() {
   const { session, loading } = useAuth();
+  const { isDesktop } = useBreakpoint();
 
   if (loading) return null;
 
   if (!session) {
     return <Redirect href="/(auth)/welcome" />;
+  }
+
+  if (isDesktop) {
+    return <DesktopShell />;
   }
 
   return (
