@@ -25,7 +25,10 @@ export default function AppLayout() {
   const { session, loading, user } = useAuth();
   const { isDesktop } = useBreakpoint();
 
-  if (loading) return null;
+  // Wait for both session and user profile to load before rendering
+  if (loading || (session && !user)) {
+    return <View style={{ flex: 1, backgroundColor: '#0A0E14' }} />;
+  }
 
   if (!session) {
     return <Redirect href="/(auth)/welcome" />;
