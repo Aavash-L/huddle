@@ -41,6 +41,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (fetchError && fetchError.code !== 'PGRST116') {
       console.error('Error fetching user profile:', fetchError);
+      // Use a shell so (app)/_layout never sees session+null user simultaneously,
+      // which would create a redirect loop with (auth)/_layout.
+      setUser((prev) => prev ?? { id: authUser.id, phone: authUser.phone ?? '', name: '', avatar_url: null, reliability_score: 0, never_bail_streak: 0, created_at: '' } as any);
       return;
     }
 
@@ -65,14 +68,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
+    let settled = false;
+    const finish = () => { if (!settled) { settled = true; setLoading(false); } };
+
+    // Safety net: force loading=false after 8 s so the app never stays black forever
+    const timeout = setTimeout(finish, 8000);
+
     supabase.auth.getSession().then(({ data: { session: s } }) => {
       setSession(s);
       if (s?.user) {
-        fetchUserProfile(s.user).finally(() => setLoading(false));
+        fetchUserProfile(s.user).finally(() => { clearTimeout(timeout); finish(); });
       } else {
-        setLoading(false);
+        clearTimeout(timeout);
+        finish();
       }
-    }).catch(() => setLoading(false));
+    }).catch(() => { clearTimeout(timeout); finish(); });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, newSession) => {
@@ -93,7 +103,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     );
 
-    return () => subscription.unsubscribe();
+    return () => { clearTimeout(timeout); subscription.unsubscribe(); };
   }, [fetchUserProfile]);
 
   const sendOTP = useCallback(async (phone: string): Promise<{ error?: string }> => {
