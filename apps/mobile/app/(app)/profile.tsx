@@ -2,7 +2,7 @@ import { View, Text, ScrollView, TouchableOpacity, Image, StyleSheet } from 'rea
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/AuthContext';
 import { usePro } from '@/hooks/usePro';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
 import ReliabilityBadge from '@/components/ReliabilityBadge';

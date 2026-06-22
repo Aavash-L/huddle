@@ -9,7 +9,7 @@ import { useRouter } from 'expo-router';
 
 import { initPostHog } from '@/lib/posthog';
 import { initRevenueCat } from '@/lib/revenuecat';
-import { useAuth } from '@/hooks/useAuth';
+import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 
 // Keep splash screen visible until we're ready
 SplashScreen.preventAutoHideAsync();
@@ -64,9 +64,11 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <GestureHandlerRootView style={{ flex: 1, backgroundColor: '#0A0E14' }}>
-      <StatusBar style="light" />
-      <RootLayoutNav />
-    </GestureHandlerRootView>
+    <AuthProvider>
+      <GestureHandlerRootView style={{ flex: 1, backgroundColor: '#0A0E14' }}>
+        <StatusBar style="light" />
+        <RootLayoutNav />
+      </GestureHandlerRootView>
+    </AuthProvider>
   );
 }

@@ -1,6 +1,6 @@
 import { Tabs, Redirect } from 'expo-router';
 import { View, Text, TouchableOpacity } from 'react-native';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/AuthContext';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
 import DesktopShell from '@/components/desktop/DesktopShell';
 

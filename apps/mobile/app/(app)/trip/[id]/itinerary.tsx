@@ -11,7 +11,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/AuthContext';
 import TripItineraryItem from '@/components/TripItineraryItem';
 import type { ItineraryItem, ItineraryItemPayload } from '@huddle/shared';
 
