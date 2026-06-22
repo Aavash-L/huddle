@@ -43,7 +43,12 @@ function RootLayoutNav() {
   if (loading) return <View style={{ flex: 1, backgroundColor: '#0A0E14' }} />;
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
+    <Stack
+      screenOptions={{
+        headerShown: false,
+        contentStyle: { backgroundColor: '#0A0E14' },
+      }}
+    >
       <Stack.Screen name="(auth)" options={{ headerShown: false }} />
       <Stack.Screen name="(app)" options={{ headerShown: false }} />
     </Stack>
