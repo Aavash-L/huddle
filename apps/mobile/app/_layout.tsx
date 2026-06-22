@@ -24,20 +24,6 @@ function RootLayoutNav() {
     }
   }, [loading]);
 
-  // Show the Tauri window only after the first real frame has painted.
-  // The window starts hidden (visible:false in tauri.conf.json) to prevent
-  // any WKWebView paint-before-content flash. Two rAFs guarantee the browser
-  // has committed at least one layout+paint cycle before the native reveal.
-  useEffect(() => {
-    if (loading) return;
-    if (typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window) {
-      import('@tauri-apps/api/window').then(({ getCurrentWindow }) => {
-        requestAnimationFrame(() =>
-          requestAnimationFrame(() => getCurrentWindow().show())
-        );
-      });
-    }
-  }, [loading]);
 
   // Handle notification taps — deep link to relevant plan (native only)
   useEffect(() => {
