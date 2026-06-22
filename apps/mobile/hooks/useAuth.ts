@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { Platform } from 'react-native';
 import { supabase } from '@/lib/supabase';
 import type { User, Session } from '@supabase/supabase-js';
 import type { User as HuddleUser } from '@huddle/shared';
@@ -68,6 +69,9 @@ export function useAuth(): AuthState & AuthActions {
 
   // Set up auth state listener on mount
   useEffect(() => {
+    // getSession() owns the initial load — it calls setLoading(false) only after
+    // fetchUserProfile completes, preventing the race where INITIAL_SESSION fires
+    // setLoading(false) before the profile fetch is done.
     supabase.auth.getSession().then(({ data: { session: s } }) => {
       setSession(s);
       if (s?.user) {
@@ -75,21 +79,28 @@ export function useAuth(): AuthState & AuthActions {
       } else {
         setLoading(false);
       }
-    }).catch((err) => {
-      console.error('useAuth: getSession failed:', err);
-      setLoading(false);
-    });
+    }).catch(() => setLoading(false));
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, newSession) => {
+        // Skip INITIAL_SESSION — getSession() handles it above.
+        // Handling it here creates a race: INITIAL_SESSION fires setLoading(false)
+        // before getSession's fetchUserProfile completes → session=truthy, user=null.
+        if (event === 'INITIAL_SESSION') return;
+
         setSession(newSession);
 
         if (event === 'SIGNED_IN' && newSession?.user) {
           await fetchUserProfile(newSession.user);
-          // Register push notifications on sign in
-          const token = await registerForPushNotifications();
-          if (token && newSession.user.id) {
-            await savePushToken(newSession.user.id, token);
+          if (Platform.OS !== 'web') {
+            try {
+              const token = await registerForPushNotifications();
+              if (token && newSession.user.id) {
+                await savePushToken(newSession.user.id, token);
+              }
+            } catch {
+              // Push registration is non-critical; don't block sign-in
+            }
           }
         } else if (event === 'SIGNED_OUT') {
           setUser(null);

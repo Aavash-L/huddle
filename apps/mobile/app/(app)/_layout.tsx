@@ -25,17 +25,11 @@ export default function AppLayout() {
   const { session, loading, user } = useAuth();
   const { isDesktop } = useBreakpoint();
 
-  // Wait for both session and user profile to load before rendering
-  if (loading || (session && !user)) {
-    return <View style={{ flex: 1, backgroundColor: '#0A0E14' }} />;
-  }
+  if (loading) return <View style={{ flex: 1, backgroundColor: '#0A0E14' }} />;
+  if (!session) return <Redirect href="/(auth)/welcome" />;
 
-  if (!session) {
-    return <Redirect href="/(auth)/welcome" />;
-  }
-
-  // Block navigation until user sets a real name
-  if (user && (!user.name || /^\d+$/.test(user.name))) {
+  // No user profile after load → new user or failed fetch; profile-setup handles both
+  if (!user || !user.name || /^\d+$/.test(user.name)) {
     return <Redirect href="/(auth)/profile-setup" />;
   }
 
