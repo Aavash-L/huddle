@@ -14,6 +14,7 @@ import { router } from 'expo-router';
 import Animated, { FadeInRight } from 'react-native-reanimated';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
+import { useBreakpoint } from '@/hooks/useBreakpoint';
 import { usePro, useHuddleLimit } from '@/hooks/usePro';
 import ThemePicker from '@/components/ThemePicker';
 import { useContacts } from '@/hooks/useContacts';
@@ -40,6 +41,7 @@ export default function NewPlanScreen() {
   const [errorMsg, setErrorMsg] = useState('');
 
   const { user, session } = useAuth();
+  const { isDesktop } = useBreakpoint();
   const { isPro } = usePro();
   const { canCreate, usedThisMonth, limit } = useHuddleLimit();
   const { contacts, requestAndLoad, searchContacts } = useContacts();
@@ -150,7 +152,7 @@ export default function NewPlanScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       {/* Header */}
-      <LinearGradient colors={['#0F2027', '#1a2a3a']} className="pt-14 pb-4 px-4">
+      <LinearGradient colors={['#0F2027', '#1a2a3a']} style={{ paddingTop: isDesktop ? 16 : 56, paddingBottom: 16, paddingHorizontal: 16 }}>
         <View className="flex-row items-center justify-between mb-4">
           <TouchableOpacity onPress={goBack}>
             <Text className="text-white/70 text-base">
@@ -170,7 +172,16 @@ export default function NewPlanScreen() {
         </View>
       </LinearGradient>
 
-      <ScrollView className="flex-1 px-4 pt-6" keyboardShouldPersistTaps="handled">
+      <ScrollView
+        className="flex-1 pt-6"
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{
+          paddingHorizontal: 16,
+          maxWidth: isDesktop ? 600 : undefined,
+          alignSelf: isDesktop ? 'center' as any : undefined,
+          width: '100%',
+        }}
+      >
 
         {/* STEP 1: Type */}
         {step === 'type' && (

@@ -1,9 +1,10 @@
 import { useState, useCallback } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
 import { usePlan } from '@/hooks/usePlan';
 import { useAuth } from '@/hooks/useAuth';
+import { useBreakpoint } from '@/hooks/useBreakpoint';
 import TimeGrid from '@/components/TimeGrid';
 import { THEMES } from '@huddle/shared';
 import type { CrewTheme } from '@huddle/shared';
@@ -12,13 +13,14 @@ import { trackAvailabilitySubmitted } from '@/lib/posthog';
 export default function AvailabilityScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuth();
+  const { isDesktop } = useBreakpoint();
   const { plan, availability, loading, submitAvailability } = usePlan(id ?? '');
   const [selectedSlots, setSelectedSlots] = useState<{ date: string; slot: string }[]>([]);
   const [saving, setSaving] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const theme = plan ? (THEMES[plan.theme as CrewTheme] ?? THEMES.ocean) : THEMES.ocean;
 
-  // Build date range: next 14 days
   const dates = Array.from({ length: 14 }, (_, i) => {
     const d = new Date();
     d.setDate(d.getDate() + i);
@@ -31,9 +33,7 @@ export default function AvailabilityScreen() {
     const key = `${date}::${slot}`;
     setSelectedSlots((prev) => {
       const existing = prev.find((s) => `${s.date}::${s.slot}` === key);
-      if (existing) {
-        return prev.filter((s) => `${s.date}::${s.slot}` !== key);
-      }
+      if (existing) return prev.filter((s) => `${s.date}::${s.slot}` !== key);
       return [...prev, { date, slot }];
     });
   }, []);
@@ -41,16 +41,17 @@ export default function AvailabilityScreen() {
   const handleSave = async () => {
     if (saving) return;
     if (selectedSlots.length === 0) {
-      Alert.alert('Pick some times', "Select at least one time you're available.");
+      setErrorMsg("Select at least one time you're available.");
       return;
     }
 
+    setErrorMsg(null);
     setSaving(true);
     const { error } = await submitAvailability(selectedSlots, true);
     setSaving(false);
 
     if (error) {
-      Alert.alert('Error', error);
+      setErrorMsg(error);
       return;
     }
 
@@ -63,7 +64,6 @@ export default function AvailabilityScreen() {
     router.back();
   };
 
-  // Map availability to per-slot user sets
   const slotUserMap: Record<string, string[]> = {};
   for (const a of availability) {
     if (!a.available) continue;
@@ -87,12 +87,11 @@ export default function AvailabilityScreen() {
 
   return (
     <View className="flex-1 bg-[#0F1117]">
-      {/* Header */}
       <LinearGradient
         colors={theme.gradient as [string, string]}
-        className="pt-14 pb-6 px-4"
+        style={{ paddingTop: isDesktop ? 20 : 56, paddingBottom: 24, paddingHorizontal: 16 }}
       >
-        <TouchableOpacity onPress={() => router.back()} className="mb-4">
+        <TouchableOpacity onPress={() => router.back()} style={{ marginBottom: 12 }}>
           <Text className="text-white/80">← Back</Text>
         </TouchableOpacity>
         <Text className="text-white text-2xl font-bold">When are you free?</Text>
@@ -103,9 +102,14 @@ export default function AvailabilityScreen() {
 
       <ScrollView
         className="flex-1"
-        contentContainerStyle={{ padding: 16, paddingBottom: 120 }}
+        contentContainerStyle={{
+          padding: 16,
+          paddingBottom: 120,
+          maxWidth: isDesktop ? 720 : undefined,
+          alignSelf: isDesktop ? 'center' as any : undefined,
+          width: '100%',
+        }}
       >
-        {/* Time grid */}
         <TimeGrid
           dates={dates}
           timeSlots={TIME_SLOTS}
@@ -115,14 +119,24 @@ export default function AvailabilityScreen() {
           maxOverlap={maxOverlap}
           currentUserId={user?.id ?? ''}
         />
-
         <Text className="text-white/30 text-xs text-center mt-4">
           Cells darken when more people are free. Brightest = best time.
         </Text>
       </ScrollView>
 
-      {/* Save button */}
-      <View className="absolute bottom-0 left-0 right-0 px-4 pb-10 pt-4 bg-[#0F1117]">
+      <View style={{
+        position: 'absolute', bottom: 0, left: 0, right: 0,
+        paddingHorizontal: 16, paddingBottom: isDesktop ? 24 : 40, paddingTop: 12,
+        backgroundColor: '#0F1117',
+        maxWidth: isDesktop ? 720 : undefined,
+        alignSelf: isDesktop ? 'center' as any : undefined,
+        width: '100%',
+      }}>
+        {errorMsg && (
+          <View className="bg-red-500/15 border border-red-500/30 rounded-xl px-4 py-3 mb-3">
+            <Text className="text-red-400 text-sm">{errorMsg}</Text>
+          </View>
+        )}
         <TouchableOpacity
           onPress={handleSave}
           disabled={saving || selectedSlots.length === 0}

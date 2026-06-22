@@ -41,6 +41,26 @@ export default function ProfileSetupScreen() {
     }
   }, [user?.name, user?.avatar_url]);
 
+  // Resize image to max 512x512 on web using canvas, then upload as JPEG
+  const compressForWeb = (file: File): Promise<Blob> =>
+    new Promise((resolve, reject) => {
+      const img = new window.Image();
+      img.onload = () => {
+        const MAX = 512;
+        const scale = Math.min(1, MAX / Math.max(img.width, img.height));
+        const w = Math.round(img.width * scale);
+        const h = Math.round(img.height * scale);
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d')!;
+        ctx.drawImage(img, 0, 0, w, h);
+        canvas.toBlob((b) => b ? resolve(b) : reject(new Error('Compress failed')), 'image/jpeg', 0.85);
+      };
+      img.onerror = reject;
+      img.src = URL.createObjectURL(file);
+    });
+
   const uploadBlob = async (blob: Blob, ext: string) => {
     setUploading(true);
     setErrorMsg(null);
@@ -48,12 +68,18 @@ export default function ProfileSetupScreen() {
       const userId = session?.user.id;
       if (!userId) throw new Error('Not authenticated');
 
-      const path = `${userId}.${ext}`;
-      const arrayBuffer = await blob.arrayBuffer();
+      // Always upload as JPEG (compressed) on web
+      const finalBlob = Platform.OS === 'web' && blob instanceof File
+        ? await compressForWeb(blob as File)
+        : blob;
+      const finalExt = Platform.OS === 'web' ? 'jpg' : ext;
+
+      const path = `${userId}.${finalExt}`;
+      const arrayBuffer = await finalBlob.arrayBuffer();
 
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(path, arrayBuffer, { contentType: `image/${ext}`, upsert: true });
+        .upload(path, arrayBuffer, { contentType: `image/${finalExt}`, upsert: true });
 
       if (uploadError) throw uploadError;
 

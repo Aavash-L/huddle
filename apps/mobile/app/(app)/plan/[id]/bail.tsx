@@ -5,83 +5,78 @@ import {
   TouchableOpacity,
   TextInput,
   ActivityIndicator,
-  Alert,
   ScrollView,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { usePlan } from '@/hooks/usePlan';
+import { useBreakpoint } from '@/hooks/useBreakpoint';
 import { BAIL_REASONS, THEMES } from '@huddle/shared';
 import type { CrewTheme } from '@huddle/shared';
 import { trackBailSubmitted } from '@/lib/posthog';
 
 export default function BailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const { isDesktop } = useBreakpoint();
   const { plan, submitCommitment, loading } = usePlan(id ?? '');
   const [selectedReason, setSelectedReason] = useState<string | null>(null);
   const [customReason, setCustomReason] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const theme = plan ? (THEMES[plan.theme as CrewTheme] ?? THEMES.ocean) : THEMES.ocean;
 
   const lockedDate = plan?.locked_datetime
     ? new Date(plan.locked_datetime).toLocaleDateString('en-US', {
-        weekday: 'long',
-        month: 'short',
-        day: 'numeric',
+        weekday: 'long', month: 'short', day: 'numeric',
       })
     : null;
 
   const handleBail = async () => {
+    setErrorMsg(null);
+
     if (!selectedReason && !customReason.trim()) {
-      Alert.alert('Give a reason', 'Help your friends understand. Pick one or write your own.');
+      setErrorMsg('Pick a reason or write your own so your friends understand.');
       return;
     }
 
-    Alert.alert(
-      'You sure?',
-      `Your friends are counting on you${lockedDate ? ` for ${lockedDate}` : ''}. Everyone will be notified when you bail.`,
-      [
-        { text: 'Actually, I\'m in', style: 'cancel' },
-        {
-          text: 'Yes, I have to bail',
-          style: 'destructive',
-          onPress: async () => {
-            setSubmitting(true);
-            const reason = customReason.trim() ||
-              (BAIL_REASONS.find((r) => r.id === selectedReason)?.label ?? 'Something came up');
+    const confirmMsg = `Your friends are counting on you${lockedDate ? ` for ${lockedDate}` : ''}. Everyone will be notified when you bail.`;
+    const ok = typeof window !== 'undefined' && window.confirm
+      ? window.confirm(confirmMsg)
+      : true;
+    if (!ok) return;
 
-            const { error } = await submitCommitment('out', reason);
-            setSubmitting(false);
+    setSubmitting(true);
+    const reason = customReason.trim() ||
+      (BAIL_REASONS.find((r) => r.id === selectedReason)?.label ?? 'Something came up');
 
-            if (error) {
-              Alert.alert('Error', error);
-              return;
-            }
+    const { error } = await submitCommitment('out', reason);
+    setSubmitting(false);
 
-            trackBailSubmitted({
-              plan_id: id ?? '',
-              reason: selectedReason ?? 'custom',
-              hours_before: plan?.locked_datetime
-                ? (new Date(plan.locked_datetime).getTime() - Date.now()) / (1000 * 60 * 60)
-                : 0,
-            });
+    if (error) {
+      setErrorMsg(error);
+      return;
+    }
 
-            router.replace(`/(app)/plan/${id}`);
-          },
-        },
-      ]
-    );
+    trackBailSubmitted({
+      plan_id: id ?? '',
+      reason: selectedReason ?? 'custom',
+      hours_before: plan?.locked_datetime
+        ? (new Date(plan.locked_datetime).getTime() - Date.now()) / (1000 * 60 * 60)
+        : 0,
+    });
+
+    router.replace(`/(app)/plan/${id}`);
   };
 
   return (
     <View className="flex-1 bg-[#0F1117]">
       <LinearGradient
         colors={['#1a0a0a', '#2a0f0f']}
-        className="pt-14 pb-6 px-4"
+        style={{ paddingTop: isDesktop ? 20 : 56, paddingBottom: 24, paddingHorizontal: 16 }}
       >
-        <TouchableOpacity onPress={() => router.back()} className="mb-4">
+        <TouchableOpacity onPress={() => router.back()} style={{ marginBottom: 12 }}>
           <Text className="text-white/80">← Actually I'm in</Text>
         </TouchableOpacity>
         <Text className="text-white text-2xl font-bold">😬 Something came up?</Text>
@@ -90,9 +85,16 @@ export default function BailScreen() {
         </Text>
       </LinearGradient>
 
-      <ScrollView className="flex-1 px-4 pt-6" contentContainerStyle={{ paddingBottom: 100 }}>
+      <ScrollView
+        className="flex-1 px-4 pt-6"
+        contentContainerStyle={{
+          paddingBottom: 120,
+          maxWidth: isDesktop ? 560 : undefined,
+          alignSelf: isDesktop ? 'center' as any : undefined,
+          width: '100%',
+        }}
+      >
         <Animated.View entering={FadeInDown.springify()}>
-          {/* Plan context */}
           {plan && (
             <View className="bg-white/5 rounded-2xl p-4 mb-6">
               <Text className="text-white font-medium">{plan.title}</Text>
@@ -106,21 +108,18 @@ export default function BailScreen() {
             What happened?
           </Text>
 
-          {/* Reason options */}
           <View className="gap-3 mb-6">
             {BAIL_REASONS.map((reason) => (
               <TouchableOpacity
                 key={reason.id}
-                onPress={() => {
-                  setSelectedReason(reason.id);
-                  setCustomReason('');
-                }}
+                onPress={() => { setSelectedReason(reason.id); setCustomReason(''); setErrorMsg(null); }}
                 className={`flex-row items-center gap-3 px-4 py-4 rounded-2xl border-2 ${
                   selectedReason === reason.id
                     ? 'bg-red-500/10 border-red-500/50'
                     : 'bg-white/5 border-white/10'
                 }`}
                 activeOpacity={0.8}
+                style={{ cursor: 'pointer' as any }}
               >
                 <Text className="text-xl">{reason.emoji}</Text>
                 <Text className={`font-medium ${selectedReason === reason.id ? 'text-red-300' : 'text-white/80'}`}>
@@ -135,17 +134,13 @@ export default function BailScreen() {
             ))}
           </View>
 
-          {/* Custom reason */}
           <Text className="text-white/50 text-xs font-semibold uppercase tracking-wider mb-3">
             Or write your own
           </Text>
-          <View className="bg-white/10 rounded-2xl px-4 py-3 mb-8">
+          <View className="bg-white/10 rounded-2xl px-4 py-3 mb-6">
             <TextInput
               value={customReason}
-              onChangeText={(text) => {
-                setCustomReason(text);
-                if (text) setSelectedReason(null);
-              }}
+              onChangeText={(text) => { setCustomReason(text); if (text) setSelectedReason(null); setErrorMsg(null); }}
               placeholder="Tell them what happened..."
               placeholderTextColor="rgba(255,255,255,0.3)"
               style={{ color: 'white', fontSize: 16 }}
@@ -154,11 +149,25 @@ export default function BailScreen() {
               numberOfLines={3}
             />
           </View>
+
+          {errorMsg && (
+            <View className="bg-red-500/15 border border-red-500/30 rounded-xl px-4 py-3 mb-4">
+              <Text className="text-red-400 text-sm">{errorMsg}</Text>
+            </View>
+          )}
         </Animated.View>
       </ScrollView>
 
-      {/* Bail button */}
-      <View className="absolute bottom-0 left-0 right-0 px-4 pb-10 pt-4 bg-[#0F1117]">
+      <View
+        style={{
+          position: 'absolute', bottom: 0, left: 0, right: 0,
+          paddingHorizontal: 16, paddingBottom: isDesktop ? 24 : 40, paddingTop: 12,
+          backgroundColor: '#0F1117',
+          maxWidth: isDesktop ? 560 : undefined,
+          alignSelf: isDesktop ? 'center' as any : undefined,
+          width: '100%',
+        }}
+      >
         <TouchableOpacity
           onPress={handleBail}
           disabled={submitting || (!selectedReason && !customReason.trim())}

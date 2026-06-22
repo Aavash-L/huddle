@@ -6,14 +6,13 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   TextInput,
-  Alert,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { usePlan } from '@/hooks/usePlan';
 import { usePro } from '@/hooks/usePro';
-import { useAuth } from '@/hooks/useAuth';
+import { useBreakpoint } from '@/hooks/useBreakpoint';
 import SuggestionCard from '@/components/SuggestionCard';
 import VibePicker from '@/components/VibePicker';
 import { THEMES } from '@huddle/shared';
@@ -23,7 +22,7 @@ import { supabase } from '@/lib/supabase';
 
 export default function AISuggestionsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { user } = useAuth();
+  const { isDesktop } = useBreakpoint();
   const { plan, suggestions, loading: planLoading, voteForSuggestion, cancelVote } = usePlan(id ?? '');
   const { requireFeature } = usePro();
 
@@ -32,10 +31,9 @@ export default function AISuggestionsScreen() {
   const [budget, setBudget] = useState('');
   const [generating, setGenerating] = useState(false);
   const [showForm, setShowForm] = useState(suggestions.length === 0);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const theme = plan ? (THEMES[plan.theme as CrewTheme] ?? THEMES.ocean) : THEMES.ocean;
-
-  // Filter to activity suggestions only
   const activitySuggestions = suggestions.filter((s) => s.kind === 'activity');
 
   const handleGenerate = useCallback(async () => {
@@ -43,16 +41,17 @@ export default function AISuggestionsScreen() {
     if (!hasAccess) return;
 
     if (!location.trim()) {
-      Alert.alert('Add a location', 'Where are you hanging out? City or neighborhood works.');
+      setErrorMsg('Add a location — city or neighborhood works.');
       return;
     }
 
+    setErrorMsg(null);
     setGenerating(true);
     trackAISuggestionRequested({
       plan_id: id ?? '',
       vibe_chips: vibes,
       location,
-      group_size: 4, // TODO: use actual invitee count
+      group_size: 4,
     });
 
     try {
@@ -84,19 +83,28 @@ export default function AISuggestionsScreen() {
 
       setShowForm(false);
     } catch (err: any) {
-      Alert.alert('Error', err.message ?? 'Failed to generate suggestions. Try again.');
+      setErrorMsg(err.message ?? 'Failed to generate suggestions. Try again.');
     } finally {
       setGenerating(false);
     }
   }, [id, vibes, location, budget, requireFeature]);
 
+  const handleAttach = (suggestion: typeof activitySuggestions[0]) => {
+    const name = (suggestion.payload as ActivitySuggestionPayload).name;
+    const ok = typeof window !== 'undefined' && window.confirm
+      ? window.confirm(`Set "${name}" as the plan activity?`)
+      : true;
+    if (!ok) return;
+    supabase.from('plans').update({ activity: name }).eq('id', id).then(() => router.back());
+  };
+
   return (
     <View className="flex-1 bg-[#0F1117]">
       <LinearGradient
         colors={theme.gradient as [string, string]}
-        className="pt-14 pb-6 px-4"
+        style={{ paddingTop: isDesktop ? 20 : 56, paddingBottom: 24, paddingHorizontal: 16 }}
       >
-        <TouchableOpacity onPress={() => router.back()} className="mb-4">
+        <TouchableOpacity onPress={() => router.back()} style={{ marginBottom: 12 }}>
           <Text className="text-white/80">← Back</Text>
         </TouchableOpacity>
         <Text className="text-white text-2xl font-bold">🤖 AI Activity Ideas</Text>
@@ -105,16 +113,22 @@ export default function AISuggestionsScreen() {
         </Text>
       </LinearGradient>
 
-      <ScrollView className="flex-1 px-4 pt-6" contentContainerStyle={{ paddingBottom: 40 }}>
-
-        {/* Input form */}
+      <ScrollView
+        className="flex-1 px-4 pt-6"
+        contentContainerStyle={{
+          paddingBottom: 40,
+          maxWidth: isDesktop ? 640 : undefined,
+          alignSelf: isDesktop ? 'center' as any : undefined,
+          width: '100%',
+        }}
+      >
         {showForm && (
           <Animated.View entering={FadeInDown.springify()} className="mb-6">
             <Text className="text-white font-semibold mb-3">Where are you hanging?</Text>
             <View className="bg-white/10 rounded-xl px-4 py-3 mb-4">
               <TextInput
                 value={location}
-                onChangeText={setLocation}
+                onChangeText={(t) => { setLocation(t); setErrorMsg(null); }}
                 placeholder="e.g. Brooklyn, Lower East Side NYC, Austin TX..."
                 placeholderTextColor="rgba(255,255,255,0.3)"
                 style={{ color: 'white', fontSize: 16 }}
@@ -140,6 +154,12 @@ export default function AISuggestionsScreen() {
               );
             }} />
 
+            {errorMsg && (
+              <View className="mt-4 bg-red-500/15 border border-red-500/30 rounded-xl px-4 py-3">
+                <Text className="text-red-400 text-sm">{errorMsg}</Text>
+              </View>
+            )}
+
             <TouchableOpacity
               onPress={handleGenerate}
               disabled={generating || !location.trim()}
@@ -160,7 +180,6 @@ export default function AISuggestionsScreen() {
           </Animated.View>
         )}
 
-        {/* Suggestions list */}
         {activitySuggestions.length > 0 && (
           <View>
             <View className="flex-row justify-between items-center mb-4">
@@ -181,26 +200,7 @@ export default function AISuggestionsScreen() {
                   rank={index + 1}
                   onVote={() => voteForSuggestion(suggestion.id)}
                   onCancelVote={() => cancelVote(suggestion.id)}
-                  onAttach={() => {
-                    // TODO: Attach winning suggestion to plan
-                    Alert.alert(
-                      'Attach Activity',
-                      `Set "${(suggestion.payload as ActivitySuggestionPayload).name}" as the plan activity?`,
-                      [
-                        { text: 'Cancel', style: 'cancel' },
-                        {
-                          text: 'Attach',
-                          onPress: async () => {
-                            await supabase
-                              .from('plans')
-                              .update({ activity: (suggestion.payload as ActivitySuggestionPayload).name })
-                              .eq('id', id);
-                            router.back();
-                          },
-                        },
-                      ]
-                    );
-                  }}
+                  onAttach={() => handleAttach(suggestion)}
                 />
               </Animated.View>
             ))}

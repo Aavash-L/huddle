@@ -4,7 +4,6 @@ import {
   Text,
   TouchableOpacity,
   TextInput,
-  Alert,
   ActivityIndicator,
   Platform,
 } from 'react-native';
@@ -12,23 +11,29 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as Haptics from 'expo-haptics';
-import Animated, { FadeInDown, useSharedValue, withSpring, useAnimatedStyle, withSequence, withDelay } from 'react-native-reanimated';
+import Animated, {
+  FadeInDown, useSharedValue, withSpring, useAnimatedStyle,
+  withSequence, withDelay,
+} from 'react-native-reanimated';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import { usePlan } from '@/hooks/usePlan';
+import { useBreakpoint } from '@/hooks/useBreakpoint';
 import { THEMES } from '@huddle/shared';
 import type { CrewTheme } from '@huddle/shared';
 import { trackPlanLocked } from '@/lib/posthog';
 
 export default function LockScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const { isDesktop } = useBreakpoint();
   const { plan, commitments, lockPlan, loading } = usePlan(id ?? '');
 
   const [date, setDate] = useState(new Date(Date.now() + 48 * 60 * 60 * 1000));
-  const [showDatePicker, setShowDatePicker] = useState(Platform.OS === 'ios');
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [location, setLocation] = useState(plan?.location ?? '');
   const [locking, setLocking] = useState(false);
   const [locked, setLocked] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const confettiRef = useRef<any>(null);
   const lockScale = useSharedValue(1);
@@ -45,37 +50,35 @@ export default function LockScreen() {
   const handleLock = async () => {
     if (locking) return;
     setLocking(true);
+    setErrorMsg(null);
 
     const { error } = await lockPlan(date.toISOString(), location.trim() || undefined);
 
     if (error) {
-      Alert.alert('Error', error);
+      setErrorMsg(error);
       setLocking(false);
       return;
     }
 
-    // LOCK IT IN celebration!
     setLocked(true);
 
-    // Haptic feedback - heavy impact
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    if (Platform.OS !== 'web') {
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    }
 
-    // Animate lock emoji
     lockOpacity.value = 1;
     lockScale.value = withSequence(
       withSpring(1.5, { damping: 6, stiffness: 200 }),
       withDelay(200, withSpring(1, { damping: 8 }))
     );
 
-    // Fire confetti
-    setTimeout(() => {
-      confettiRef.current?.start();
-    }, 100);
+    setTimeout(() => { confettiRef.current?.start(); }, 100);
 
-    // Second haptic
-    setTimeout(async () => {
-      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    }, 300);
+    if (Platform.OS !== 'web') {
+      setTimeout(async () => {
+        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }, 300);
+    }
 
     trackPlanLocked({
       plan_id: id ?? '',
@@ -86,27 +89,26 @@ export default function LockScreen() {
       has_location: !!location.trim(),
     });
 
-    // Navigate back to plan detail after celebration
-    setTimeout(() => {
-      router.replace(`/(app)/plan/${id}`);
-    }, 2500);
+    setTimeout(() => { router.replace(`/(app)/plan/${id}`); }, 2500);
   };
 
-  const formattedDate = date.toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-  });
+  // Local datetime string for web input (datetime-local format = YYYY-MM-DDTHH:mm)
+  const localIso = new Date(date.getTime() - date.getTimezoneOffset() * 60000)
+    .toISOString()
+    .slice(0, 16);
+  const minIso = new Date(Date.now() - new Date().getTimezoneOffset() * 60000)
+    .toISOString()
+    .slice(0, 16);
 
+  const formattedDate = date.toLocaleDateString('en-US', {
+    weekday: 'long', month: 'long', day: 'numeric',
+  });
   const formattedTime = date.toLocaleTimeString('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
+    hour: 'numeric', minute: '2-digit', hour12: true,
   });
 
   return (
     <View className="flex-1 bg-[#0F1117]">
-      {/* Confetti — renders on top */}
       <ConfettiCannon
         ref={confettiRef}
         count={150}
@@ -119,10 +121,10 @@ export default function LockScreen() {
 
       <LinearGradient
         colors={theme.gradient as [string, string]}
-        className="pt-14 pb-6 px-4"
+        style={{ paddingTop: isDesktop ? 20 : 56, paddingBottom: 24, paddingHorizontal: 16 }}
       >
         {!locked && (
-          <TouchableOpacity onPress={() => router.back()} className="mb-4">
+          <TouchableOpacity onPress={() => router.back()} style={{ marginBottom: 12 }}>
             <Text className="text-white/80">← Back</Text>
           </TouchableOpacity>
         )}
@@ -137,20 +139,12 @@ export default function LockScreen() {
       </LinearGradient>
 
       {locked ? (
-        /* Celebration state */
         <View className="flex-1 items-center justify-center px-6">
-          <Animated.Text
-            style={[
-              lockStyle,
-              { fontSize: 80, textAlign: 'center' },
-            ]}
-          >
+          <Animated.Text style={[lockStyle, { fontSize: 80, textAlign: 'center' }]}>
             🔒
           </Animated.Text>
           <Animated.View entering={FadeInDown.delay(400).springify()} className="items-center mt-6">
-            <Text className="text-white text-3xl font-bold text-center mb-2">
-              It's HAPPENING!
-            </Text>
+            <Text className="text-white text-3xl font-bold text-center mb-2">It's HAPPENING!</Text>
             <Text className="text-white/70 text-base text-center">
               {formattedDate} at {formattedTime}
               {location ? `\n📍 ${location}` : ''}
@@ -161,15 +155,42 @@ export default function LockScreen() {
           </Animated.View>
         </View>
       ) : (
-        /* Lock form */
-        <View className="flex-1 px-4 pt-6">
+        <View
+          style={{
+            flex: 1,
+            paddingHorizontal: 16,
+            paddingTop: 24,
+            maxWidth: isDesktop ? 560 : undefined,
+            alignSelf: isDesktop ? 'center' as any : undefined,
+            width: '100%',
+          }}
+        >
           <Animated.View entering={FadeInDown.springify()}>
-            {/* Date picker */}
             <Text className="text-white/50 text-xs font-semibold uppercase tracking-wider mb-2">
-              Date & Time
+              Date &amp; Time
             </Text>
             <View className="bg-white/10 rounded-2xl p-4 mb-4">
-              {Platform.OS === 'ios' ? (
+              {Platform.OS === 'web' ? (
+                // Web: native datetime-local input
+                <input
+                  type="datetime-local"
+                  value={localIso}
+                  min={minIso}
+                  onChange={(e) => {
+                    if (e.target.value) setDate(new Date(e.target.value));
+                  }}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    color: 'white',
+                    fontSize: 16,
+                    width: '100%',
+                    colorScheme: 'dark',
+                    outline: 'none',
+                    cursor: 'pointer',
+                  } as any}
+                />
+              ) : Platform.OS === 'ios' ? (
                 <DateTimePicker
                   value={date}
                   mode="datetime"
@@ -195,17 +216,13 @@ export default function LockScreen() {
                     <Text className="text-white">🕗 {formattedTime}</Text>
                     <Text className="text-white/40">Change →</Text>
                   </TouchableOpacity>
-
                   {showDatePicker && (
                     <DateTimePicker
                       value={date}
                       mode="date"
                       display="default"
                       minimumDate={new Date()}
-                      onChange={(_, d) => {
-                        setShowDatePicker(false);
-                        if (d) setDate(d);
-                      }}
+                      onChange={(_, d) => { setShowDatePicker(false); if (d) setDate(d); }}
                     />
                   )}
                   {showTimePicker && (
@@ -213,21 +230,17 @@ export default function LockScreen() {
                       value={date}
                       mode="time"
                       display="default"
-                      onChange={(_, d) => {
-                        setShowTimePicker(false);
-                        if (d) setDate(d);
-                      }}
+                      onChange={(_, d) => { setShowTimePicker(false); if (d) setDate(d); }}
                     />
                   )}
                 </>
               )}
             </View>
 
-            {/* Location */}
             <Text className="text-white/50 text-xs font-semibold uppercase tracking-wider mb-2">
               Location (optional)
             </Text>
-            <View className="bg-white/10 rounded-2xl px-4 py-3 mb-8">
+            <View className="bg-white/10 rounded-2xl px-4 py-3 mb-4">
               <TextInput
                 value={location}
                 onChangeText={setLocation}
@@ -237,11 +250,16 @@ export default function LockScreen() {
               />
             </View>
 
-            {/* Lock button */}
+            {errorMsg && (
+              <View className="bg-red-500/15 border border-red-500/30 rounded-xl px-4 py-3 mb-4">
+                <Text className="text-red-400 text-sm">{errorMsg}</Text>
+              </View>
+            )}
+
             <TouchableOpacity
               onPress={handleLock}
               disabled={locking}
-              className="rounded-2xl overflow-hidden"
+              className="rounded-2xl overflow-hidden mb-4"
               activeOpacity={0.85}
             >
               <LinearGradient
@@ -258,7 +276,7 @@ export default function LockScreen() {
               </LinearGradient>
             </TouchableOpacity>
 
-            <Text className="text-white/30 text-sm text-center mt-4">
+            <Text className="text-white/30 text-sm text-center">
               Everyone in the group will be notified immediately.
             </Text>
           </Animated.View>
