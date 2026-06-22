@@ -1,5 +1,5 @@
-import { useEffect, Platform } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { useEffect } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Image, Platform } from 'react-native';
 import { Slot, usePathname, useRouter } from 'expo-router';
 import { useAuth } from '@/hooks/useAuth';
 import Animated, { FadeInLeft } from 'react-native-reanimated';
@@ -89,7 +89,14 @@ export default function DesktopShell() {
           activeOpacity={0.8}
         >
           <View style={styles.avatar}>
-            <Text style={{ color: '#fff', fontWeight: '700', fontSize: 13 }}>{initials}</Text>
+            {user?.avatar_url ? (
+              <Image
+                source={{ uri: user.avatar_url }}
+                style={{ width: 32, height: 32, borderRadius: 16 }}
+              />
+            ) : (
+              <Text style={{ color: '#fff', fontWeight: '700', fontSize: 13 }}>{initials}</Text>
+            )}
           </View>
           <View style={{ flex: 1, minWidth: 0 }}>
             <Text style={styles.userName} numberOfLines={1}>{user?.name ?? 'You'}</Text>

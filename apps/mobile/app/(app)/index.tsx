@@ -1,4 +1,3 @@
-import { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -10,22 +9,15 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
+import { usePlans, type PlanWithMeta } from '@/hooks/usePlans';
 import DesktopHome from '@/components/desktop/DesktopHome';
 import PlanCard from '@/components/PlanCard';
-import type { Plan, PlanStatus } from '@huddle/shared';
+import type { PlanStatus } from '@huddle/shared';
 import { PLAN_STATUSES } from '@huddle/shared';
 
 const STATUS_ORDER: PlanStatus[] = ['locked', 'converging', 'gathering', 'happened'];
-
-interface PlanWithMeta extends Plan {
-  creator_name: string;
-  in_count: number;
-  invitee_count: number;
-  my_commitment: 'in' | 'wavering' | 'out' | null;
-}
 
 function SectionHeader({ status, count }: { status: PlanStatus; count: number }) {
   const meta = PLAN_STATUSES[status];
@@ -44,57 +36,7 @@ function SectionHeader({ status, count }: { status: PlanStatus; count: number })
 
 function MobileHome() {
   const { user } = useAuth();
-  const [plans, setPlans] = useState<PlanWithMeta[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-
-  const fetchPlans = useCallback(async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return;
-
-    const { data, error } = await supabase
-      .from('plans')
-      .select(`
-        *,
-        creator:users!creator_id(name),
-        plan_invitees(user_id),
-        commitments(user_id, status)
-      `)
-      .or(`creator_id.eq.${session.user.id},plan_invitees.user_id.eq.${session.user.id}`)
-      .not('status', 'in', '("cancelled")')
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching plans:', error);
-      return;
-    }
-
-    const mapped: PlanWithMeta[] = (data ?? []).map((p: any) => {
-      const commitments = p.commitments ?? [];
-      const myCommitment = commitments.find((c: any) => c.user_id === session.user.id);
-      const inCount = commitments.filter((c: any) => c.status === 'in').length;
-
-      return {
-        ...p,
-        creator_name: p.creator?.name ?? 'Someone',
-        in_count: inCount,
-        invitee_count: p.plan_invitees?.length ?? 0,
-        my_commitment: myCommitment?.status ?? null,
-      };
-    });
-
-    setPlans(mapped);
-  }, []);
-
-  useEffect(() => {
-    fetchPlans().finally(() => setLoading(false));
-  }, [fetchPlans]);
-
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    await fetchPlans();
-    setRefreshing(false);
-  };
+  const { plans, loading, refreshing, refresh: handleRefresh } = usePlans();
 
   const grouped = STATUS_ORDER.reduce((acc, status) => {
     const group = plans.filter((p) => p.status === status);

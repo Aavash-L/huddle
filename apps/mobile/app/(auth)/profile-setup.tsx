@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,7 +7,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
-  Alert,
   Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -18,7 +17,6 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/lib/supabase';
 import { trackProfileCreated } from '@/lib/posthog';
-import { useContacts } from '@/hooks/useContacts';
 
 export default function ProfileSetupScreen() {
   const [name, setName] = useState('');
@@ -26,59 +24,85 @@ export default function ProfileSetupScreen() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const { updateProfile, session } = useAuth();
-  const { requestAndLoad } = useContacts();
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const { updateProfile, session, user } = useAuth();
 
+  const isEditing = !!(user?.name && !/^\d+$/.test(user.name));
   const isValid = name.trim().length >= 2;
 
-  const handlePickAvatar = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.8,
-    });
+  // Pre-populate when editing
+  useEffect(() => {
+    if (user?.name && !/^\d+$/.test(user.name)) {
+      setName(user.name);
+    }
+    if (user?.avatar_url) {
+      setAvatarUri(user.avatar_url);
+      setAvatarUrl(user.avatar_url);
+    }
+  }, [user?.name, user?.avatar_url]);
 
-    if (result.canceled || !result.assets[0]) return;
-
-    const asset = result.assets[0];
-    setAvatarUri(asset.uri);
+  const uploadBlob = async (blob: Blob, ext: string) => {
     setUploading(true);
-
+    setErrorMsg(null);
     try {
       const userId = session?.user.id;
       if (!userId) throw new Error('Not authenticated');
 
-      // Upload to Supabase Storage
-      const ext = asset.uri.split('.').pop() ?? 'jpg';
-      const path = `avatars/${userId}.${ext}`;
-
-      const response = await fetch(asset.uri);
-      const blob = await response.blob();
-      const arrayBuffer = await new Response(blob).arrayBuffer();
+      const path = `${userId}.${ext}`;
+      const arrayBuffer = await blob.arrayBuffer();
 
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(path, arrayBuffer, {
-          contentType: `image/${ext}`,
-          upsert: true,
-        });
+        .upload(path, arrayBuffer, { contentType: `image/${ext}`, upsert: true });
 
       if (uploadError) throw uploadError;
 
       const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path);
       setAvatarUrl(publicUrl);
     } catch (err: any) {
-      Alert.alert('Upload failed', err.message ?? 'Could not upload photo. Try again.');
-      setAvatarUri(null);
+      setErrorMsg(err.message ?? 'Could not upload photo. Try again.');
+      setAvatarUri(user?.avatar_url ?? null);
     } finally {
       setUploading(false);
+    }
+  };
+
+  const handlePickAvatar = async () => {
+    if (Platform.OS === 'web') {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      input.onchange = async (e: any) => {
+        const file: File = e.target.files?.[0];
+        if (!file) return;
+        const ext = file.name.split('.').pop()?.toLowerCase() ?? 'jpg';
+        setAvatarUri(URL.createObjectURL(file));
+        await uploadBlob(file, ext);
+      };
+      input.click();
+    } else {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (result.canceled || !result.assets[0]) return;
+
+      const asset = result.assets[0];
+      setAvatarUri(asset.uri);
+      const ext = asset.uri.split('.').pop()?.toLowerCase() ?? 'jpg';
+      const response = await fetch(asset.uri);
+      const blob = await response.blob();
+      await uploadBlob(blob, ext);
     }
   };
 
   const handleSave = async () => {
     if (!isValid || saving) return;
     setSaving(true);
+    setErrorMsg(null);
 
     const { error } = await updateProfile({
       name: name.trim(),
@@ -88,31 +112,17 @@ export default function ProfileSetupScreen() {
     setSaving(false);
 
     if (error) {
-      Alert.alert('Error', error);
+      setErrorMsg(error);
       return;
     }
 
-    trackProfileCreated();
+    if (!isEditing) trackProfileCreated();
 
-    // Optionally import contacts before going to main app
-    router.replace('/(app)');
-  };
-
-  const handleSkipAvatar = async () => {
-    if (!isValid || saving) return;
-    setSaving(true);
-
-    const { error } = await updateProfile({ name: name.trim() });
-    setSaving(false);
-
-    if (!error) {
-      trackProfileCreated();
+    if (router.canGoBack()) {
+      router.back();
+    } else {
       router.replace('/(app)');
     }
-  };
-
-  const handleImportContacts = async () => {
-    await requestAndLoad();
   };
 
   return (
@@ -126,13 +136,19 @@ export default function ProfileSetupScreen() {
       >
         <StatusBar style="light" />
 
-        <View className="flex-1 px-6 pt-16">
+        <View className="flex-1 px-6 pt-16" style={{ maxWidth: 480, alignSelf: 'center', width: '100%' }}>
           <Animated.View entering={FadeInDown.springify()}>
+            {isEditing && (
+              <TouchableOpacity onPress={() => router.back()} className="mb-6">
+                <Text className="text-white/60 text-base">← Back</Text>
+              </TouchableOpacity>
+            )}
+
             <Text className="text-4xl font-bold text-white mb-2">
-              Set up your profile
+              {isEditing ? 'Edit profile' : 'Set up your profile'}
             </Text>
             <Text className="text-white/60 text-base mb-10">
-              So your friends know who's planning
+              {isEditing ? 'Update your name and photo' : 'So your friends know who\'s planning'}
             </Text>
 
             {/* Avatar picker */}
@@ -141,6 +157,7 @@ export default function ProfileSetupScreen() {
                 onPress={handlePickAvatar}
                 className="w-24 h-24 rounded-full bg-white/10 items-center justify-center overflow-hidden border-2 border-white/20"
                 activeOpacity={0.8}
+                style={{ cursor: 'pointer' as any }}
               >
                 {uploading ? (
                   <ActivityIndicator color="white" />
@@ -153,6 +170,9 @@ export default function ProfileSetupScreen() {
                   </View>
                 )}
               </TouchableOpacity>
+              {avatarUri && !uploading && (
+                <Text className="text-white/40 text-xs mt-2">Tap to change</Text>
+              )}
             </View>
 
             {/* Name input */}
@@ -165,13 +185,20 @@ export default function ProfileSetupScreen() {
                 onChangeText={setName}
                 placeholder="First name (or nickname)"
                 placeholderTextColor="rgba(255,255,255,0.3)"
-                autoFocus
+                autoFocus={!isEditing}
                 className="text-white text-xl font-medium"
                 style={{ color: 'white', fontSize: 20 }}
                 maxLength={30}
                 autoCapitalize="words"
               />
             </View>
+
+            {/* Error */}
+            {errorMsg && (
+              <View className="bg-red-500/15 border border-red-500/30 rounded-xl px-4 py-3 mb-4">
+                <Text className="text-red-400 text-sm">{errorMsg}</Text>
+              </View>
+            )}
 
             <Text className="text-white/40 text-sm mb-8">
               This is how you'll appear to friends on Huddle.
@@ -188,19 +215,9 @@ export default function ProfileSetupScreen() {
                 <ActivityIndicator color={isValid ? '#0F2027' : 'white'} />
               ) : (
                 <Text className={`text-lg font-bold ${isValid && !uploading ? 'text-[#0F2027]' : 'text-white/40'}`}>
-                  Let's go 🎉
+                  {isEditing ? 'Save Changes' : "Let's go 🎉"}
                 </Text>
               )}
-            </TouchableOpacity>
-
-            {/* Import contacts nudge */}
-            <TouchableOpacity
-              onPress={handleImportContacts}
-              className="items-center py-3"
-            >
-              <Text className="text-white/50 text-sm">
-                📱 Import contacts to find friends faster
-              </Text>
             </TouchableOpacity>
           </Animated.View>
         </View>

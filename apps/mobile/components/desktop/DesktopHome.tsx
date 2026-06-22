@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
   RefreshControl, ActivityIndicator, StyleSheet,
@@ -6,22 +6,15 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
-import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
 import { usePlan } from '@/hooks/usePlan';
+import { usePlans, type PlanWithMeta } from '@/hooks/usePlans';
 import AvatarCluster from '@/components/AvatarCluster';
 import PlanCard from '@/components/PlanCard';
 import { THEMES, PLAN_STATUSES, PLAN_TYPES } from '@huddle/shared';
-import type { Plan, PlanStatus, CrewTheme } from '@huddle/shared';
+import type { PlanStatus, CrewTheme } from '@huddle/shared';
 
 const STATUS_ORDER: PlanStatus[] = ['locked', 'converging', 'gathering', 'happened'];
-
-interface PlanWithMeta extends Plan {
-  creator_name: string;
-  in_count: number;
-  invitee_count: number;
-  my_commitment: 'in' | 'wavering' | 'out' | null;
-}
 
 function StatusPill({ status }: { status: string }) {
   const meta = PLAN_STATUSES[status as keyof typeof PLAN_STATUSES];
@@ -281,53 +274,8 @@ function EmptyDetail() {
 
 export default function DesktopHome() {
   const { user } = useAuth();
-  const [plans, setPlans] = useState<PlanWithMeta[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
+  const { plans, loading, refreshing, refresh: handleRefresh } = usePlans();
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
-
-  const fetchPlans = useCallback(async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return;
-
-    const { data, error } = await supabase
-      .from('plans')
-      .select(`
-        *,
-        creator:users!creator_id(name),
-        plan_invitees(user_id),
-        commitments(user_id, status)
-      `)
-      .or(`creator_id.eq.${session.user.id},plan_invitees.user_id.eq.${session.user.id}`)
-      .not('status', 'in', '("cancelled")')
-      .order('created_at', { ascending: false });
-
-    if (error) { console.error('DesktopHome fetchPlans:', error); return; }
-
-    const mapped: PlanWithMeta[] = (data ?? []).map((p: any) => {
-      const cs = p.commitments ?? [];
-      const mine = cs.find((c: any) => c.user_id === session.user.id);
-      return {
-        ...p,
-        creator_name: p.creator?.name ?? 'Someone',
-        in_count: cs.filter((c: any) => c.status === 'in').length,
-        invitee_count: p.plan_invitees?.length ?? 0,
-        my_commitment: mine?.status ?? null,
-      };
-    });
-
-    setPlans(mapped);
-  }, []);
-
-  useEffect(() => {
-    fetchPlans().finally(() => setLoading(false));
-  }, [fetchPlans]);
-
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    await fetchPlans();
-    setRefreshing(false);
-  };
 
   const grouped = STATUS_ORDER.reduce((acc, status) => {
     const group = plans.filter((p) => p.status === status);

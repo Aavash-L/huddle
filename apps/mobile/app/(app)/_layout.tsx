@@ -22,13 +22,18 @@ function TabIcon({ emoji, label, focused }: { emoji: string; label: string; focu
 }
 
 export default function AppLayout() {
-  const { session, loading } = useAuth();
+  const { session, loading, user } = useAuth();
   const { isDesktop } = useBreakpoint();
 
   if (loading) return null;
 
   if (!session) {
     return <Redirect href="/(auth)/welcome" />;
+  }
+
+  // Block navigation until user sets a real name
+  if (user && (!user.name || /^\d+$/.test(user.name))) {
+    return <Redirect href="/(auth)/profile-setup" />;
   }
 
   if (isDesktop) {
