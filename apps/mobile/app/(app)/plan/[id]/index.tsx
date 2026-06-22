@@ -4,6 +4,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { usePlan } from '@/hooks/usePlan';
 import { useAuth } from '@/hooks/useAuth';
+import { useBreakpoint } from '@/hooks/useBreakpoint';
 import AvatarCluster from '@/components/AvatarCluster';
 import { THEMES, PLAN_STATUSES, PLAN_TYPES } from '@huddle/shared';
 import type { CrewTheme } from '@huddle/shared';
@@ -59,6 +60,7 @@ function ActionButton({ emoji, label, onPress, color = 'bg-white/10' }: {
 export default function PlanDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuth();
+  const { isDesktop } = useBreakpoint();
   const {
     plan,
     commitments,
@@ -116,7 +118,7 @@ export default function PlanDetailScreen() {
       {/* Themed header */}
       <LinearGradient
         colors={theme.gradient as [string, string]}
-        className="pt-14 pb-8 px-4"
+        style={{ paddingTop: isDesktop ? 20 : 56, paddingBottom: 28, paddingHorizontal: 24 }}
       >
         {/* Back */}
         <TouchableOpacity onPress={() => router.back()} className="mb-4">
@@ -149,7 +151,7 @@ export default function PlanDetailScreen() {
         )}
       </LinearGradient>
 
-      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 40 }}>
+      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 40, maxWidth: isDesktop ? 680 : undefined, alignSelf: isDesktop ? 'center' as any : undefined, width: '100%' }}>
         {/* Commitment roster */}
         <Animated.View entering={FadeInDown.delay(100).springify()} className="px-4 py-5">
           <Text className="text-white/50 text-xs font-semibold uppercase tracking-wider mb-3">

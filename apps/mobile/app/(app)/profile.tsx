@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, TouchableOpacity, Image, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
@@ -23,19 +23,17 @@ export default function ProfileScreen() {
   if (!user) return null;
 
   const handleSignOut = () => {
-    Alert.alert(
-      'Sign Out',
-      'Are you sure you want to sign out?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Sign Out',
-          style: 'destructive',
-          onPress: () => signOut(),
-        },
-      ]
-    );
+    if (typeof window !== 'undefined' && window.confirm) {
+      if (window.confirm('Sign out of Huddle?')) signOut();
+    } else {
+      signOut();
+    }
   };
+
+  const displayName = user.name && !/^\d+$/.test(user.name) ? user.name : null;
+  const displayPhone = user.phone
+    ? user.phone.replace(/^\+1(\d{3})(\d{3})(\d{4})$/, '($1) $2-$3')
+    : user.phone;
 
   const showsUpPercent = user.reliability_score;
 
@@ -58,8 +56,14 @@ export default function ProfileScreen() {
             )}
           </View>
 
-          <Text className="text-white text-2xl font-bold">{user.name}</Text>
-          <Text className="text-white/60 text-sm mt-1">{user.phone}</Text>
+          {displayName ? (
+            <Text className="text-white text-2xl font-bold">{displayName}</Text>
+          ) : (
+            <TouchableOpacity onPress={() => router.push('/(auth)/profile-setup')} activeOpacity={0.8}>
+              <Text className="text-white/50 text-lg font-medium">Set your name →</Text>
+            </TouchableOpacity>
+          )}
+          <Text className="text-white/60 text-sm mt-1">{displayPhone}</Text>
 
           {/* Pro badge */}
           {(isPro || isTrialing) && (

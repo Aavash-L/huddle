@@ -151,6 +151,12 @@ export default function ChatScreen() {
             returnKeyType="default"
             blurOnSubmit={false}
             maxLength={500}
+            onKeyPress={(e: any) => {
+              if (e.nativeEvent.key === 'Enter' && !e.nativeEvent.shiftKey) {
+                e.preventDefault?.();
+                handleSend();
+              }
+            }}
           />
         </View>
         <TouchableOpacity
