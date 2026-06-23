@@ -14,7 +14,7 @@ import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as ImagePicker from 'expo-image-picker';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/lib/supabase';
 import { trackProfileCreated } from '@/lib/posthog';
 

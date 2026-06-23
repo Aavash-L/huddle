@@ -6,7 +6,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { usePlan } from '@/hooks/usePlan';
 import { usePlans, type PlanWithMeta } from '@/hooks/usePlans';
 import AvatarCluster from '@/components/AvatarCluster';

@@ -1,16 +1,13 @@
 import { Stack, Redirect } from 'expo-router';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function AuthLayout() {
-  const { session, loading, user } = useAuth();
+  const { session, loading } = useAuth();
 
   if (loading) return null;
 
-  // Only redirect to the app when the user has a complete profile.
-  // If session exists but user.name is missing we're still in onboarding —
-  // don't redirect or we create a loop with (app)/_layout → profile-setup.
-  const hasProfile = !!user?.name && !/^\d+$/.test(user.name);
-  if (session && hasProfile) {
+  // If already authenticated, redirect to main app
+  if (session) {
     return <Redirect href="/(app)" />;
   }
 

@@ -3,7 +3,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { usePlan } from '@/hooks/usePlan';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
 import AvatarCluster from '@/components/AvatarCluster';
 import { THEMES, PLAN_STATUSES, PLAN_TYPES } from '@huddle/shared';

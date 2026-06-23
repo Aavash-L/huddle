@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image, Platform } from 'react-native';
 import { Slot, usePathname, useRouter } from 'expo-router';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import Animated, { FadeInLeft } from 'react-native-reanimated';
 
 const NAV_ITEMS = [

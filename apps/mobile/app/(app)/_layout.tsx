@@ -1,6 +1,6 @@
 import { Tabs, Redirect } from 'expo-router';
 import { View, Text, TouchableOpacity } from 'react-native';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
 import DesktopShell from '@/components/desktop/DesktopShell';
 
@@ -25,11 +25,14 @@ export default function AppLayout() {
   const { session, loading, user } = useAuth();
   const { isDesktop } = useBreakpoint();
 
-  if (loading) return <View style={{ flex: 1, backgroundColor: '#0A0E14' }} />;
-  if (!session) return <Redirect href="/(auth)/welcome" />;
+  if (loading) return null;
 
-  // No user profile after load → new user or failed fetch; profile-setup handles both
-  if (!user || !user.name || /^\d+$/.test(user.name)) {
+  if (!session) {
+    return <Redirect href="/(auth)/welcome" />;
+  }
+
+  // Block navigation until user sets a real name
+  if (user && (!user.name || /^\d+$/.test(user.name))) {
     return <Redirect href="/(auth)/profile-setup" />;
   }
 

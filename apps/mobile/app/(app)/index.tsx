@@ -9,7 +9,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
 import { usePlans, type PlanWithMeta } from '@/hooks/usePlans';
 import DesktopHome from '@/components/desktop/DesktopHome';

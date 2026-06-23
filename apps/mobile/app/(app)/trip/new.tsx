@@ -15,7 +15,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import Animated, { FadeInRight } from 'react-native-reanimated';
 import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { usePro } from '@/hooks/usePro';
 import { trackTripCreated } from '@/lib/posthog';
 

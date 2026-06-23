@@ -1,6 +1,6 @@
 import '../global.css';
 import { useEffect } from 'react';
-import { Platform, View } from 'react-native';
+import { Platform } from 'react-native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
@@ -9,7 +9,7 @@ import { useRouter } from 'expo-router';
 
 import { initPostHog } from '@/lib/posthog';
 import { initRevenueCat } from '@/lib/revenuecat';
-import { AuthProvider, useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 
 // Keep splash screen visible until we're ready
 SplashScreen.preventAutoHideAsync();
@@ -23,7 +23,6 @@ function RootLayoutNav() {
       SplashScreen.hideAsync();
     }
   }, [loading]);
-
 
   // Handle notification taps — deep link to relevant plan (native only)
   useEffect(() => {
@@ -40,15 +39,10 @@ function RootLayoutNav() {
     return () => subscription.remove();
   }, [router]);
 
-  if (loading) return <View style={{ flex: 1, backgroundColor: '#0A0E14' }} />;
+  if (loading) return null;
 
   return (
-    <Stack
-      screenOptions={{
-        headerShown: false,
-        contentStyle: { backgroundColor: '#0A0E14' },
-      }}
-    >
+    <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(auth)" options={{ headerShown: false }} />
       <Stack.Screen name="(app)" options={{ headerShown: false }} />
     </Stack>
@@ -64,11 +58,9 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <AuthProvider>
-      <GestureHandlerRootView style={{ flex: 1, backgroundColor: '#0A0E14' }}>
-        <StatusBar style="light" />
-        <RootLayoutNav />
-      </GestureHandlerRootView>
-    </AuthProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <StatusBar style="auto" />
+      <RootLayoutNav />
+    </GestureHandlerRootView>
   );
 }

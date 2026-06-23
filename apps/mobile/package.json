@@ -11,12 +11,11 @@
     "prebuild": "expo prebuild",
     "build:ios": "eas build --platform ios",
     "build:android": "eas build --platform android",
-    "export:web": "expo export --platform web --clear && node ../../scripts/inline-dark-bg.js",
+    "export:web": "expo export --platform web",
     "type-check": "tsc --noEmit",
     "lint": "eslint . --ext .ts,.tsx"
   },
   "dependencies": {
-    "@expo/metro-runtime": "~4.0.1",
     "@expo/vector-icons": "^14.0.4",
     "@gorhom/bottom-sheet": "^4.6.4",
     "@huddle/shared": "workspace:*",
@@ -24,14 +23,13 @@
     "@react-native-community/datetimepicker": "8.2.0",
     "@react-navigation/native": "^6.1.18",
     "@supabase/supabase-js": "^2.47.2",
-    "@tauri-apps/api": "^2",
     "expo": "^52.0.28",
     "expo-av": "~15.0.2",
+    "expo-device": "~7.0.2",
     "expo-blur": "~14.0.3",
     "expo-camera": "~16.0.14",
     "expo-contacts": "^14.0.0",
     "expo-dev-client": "~5.0.14",
-    "expo-device": "~7.0.2",
     "expo-font": "~13.0.3",
     "expo-haptics": "~14.0.1",
     "expo-image": "~2.0.6",
@@ -56,9 +54,10 @@
     "react-native-screens": "~4.4.0",
     "react-native-svg": "15.8.0",
     "react-native-url-polyfill": "^2.0.0",
-    "react-native-web": "~0.19.13",
     "tailwind-merge": "^2.6.0",
-    "zustand": "^5.0.2"
+    "zustand": "^5.0.2",
+    "@expo/metro-runtime": "~4.0.1",
+    "react-native-web": "~0.19.13"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

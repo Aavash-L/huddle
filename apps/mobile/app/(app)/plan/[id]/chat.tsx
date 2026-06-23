@@ -13,7 +13,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
 import { usePlan } from '@/hooks/usePlan';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { THEMES } from '@huddle/shared';
 import type { MessageWithUser, CrewTheme } from '@huddle/shared';
 
