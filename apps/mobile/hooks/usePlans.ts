@@ -9,6 +9,13 @@ export interface PlanWithMeta extends Plan {
   my_commitment: 'in' | 'wavering' | 'out' | null;
 }
 
+const PLAN_SELECT = `
+  *,
+  creator:users!creator_id(name),
+  plan_invitees(user_id),
+  commitments(user_id, status)
+`;
+
 export function usePlans() {
   const [plans, setPlans] = useState<PlanWithMeta[]>([]);
   const [loading, setLoading] = useState(true);
@@ -19,23 +26,54 @@ export function usePlans() {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
 
-    const { data, error } = await supabase
+    const uid = session.user.id;
+
+    // Query 1: plans I created
+    const { data: created, error: e1 } = await supabase
       .from('plans')
-      .select(`
-        *,
-        creator:users!creator_id(name),
-        plan_invitees(user_id),
-        commitments(user_id, status)
-      `)
-      .or(`creator_id.eq.${session.user.id},plan_invitees.user_id.eq.${session.user.id}`)
+      .select(PLAN_SELECT)
+      .eq('creator_id', uid)
       .not('status', 'in', '("cancelled")')
       .order('created_at', { ascending: false });
 
-    if (error) { console.error('usePlans:', error); return; }
+    if (e1) console.error('usePlans (created):', e1);
 
-    const mapped: PlanWithMeta[] = (data ?? []).map((p: any) => {
+    // Query 2: plan_ids where I'm an invitee
+    const { data: inviteRows, error: e2 } = await supabase
+      .from('plan_invitees')
+      .select('plan_id')
+      .eq('user_id', uid);
+
+    if (e2) console.error('usePlans (invites):', e2);
+
+    const invitedIds = (inviteRows ?? []).map((r: any) => r.plan_id as string);
+
+    // Query 3: fetch those invited plans (skip if none)
+    let invited: any[] = [];
+    if (invitedIds.length > 0) {
+      const { data, error: e3 } = await supabase
+        .from('plans')
+        .select(PLAN_SELECT)
+        .in('id', invitedIds)
+        .not('status', 'in', '("cancelled")')
+        .order('created_at', { ascending: false });
+
+      if (e3) console.error('usePlans (invited plans):', e3);
+      invited = data ?? [];
+    }
+
+    // Merge + dedupe (created takes precedence), sort by created_at desc
+    const seen = new Set((created ?? []).map((p: any) => p.id));
+    const merged = [
+      ...(created ?? []),
+      ...invited.filter((p: any) => !seen.has(p.id)),
+    ].sort((a: any, b: any) =>
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
+
+    const mapped: PlanWithMeta[] = merged.map((p: any) => {
       const cs = p.commitments ?? [];
-      const mine = cs.find((c: any) => c.user_id === session.user.id);
+      const mine = cs.find((c: any) => c.user_id === uid);
       return {
         ...p,
         creator_name: p.creator?.name ?? 'Someone',
