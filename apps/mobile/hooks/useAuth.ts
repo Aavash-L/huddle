@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { Platform } from 'react-native';
 import { supabase } from '@/lib/supabase';
 import type { User, Session } from '@supabase/supabase-js';
 import type { User as HuddleUser } from '@huddle/shared';
@@ -49,8 +50,9 @@ export function useAuth(): AuthState & AuthActions {
         reliability_score: data.reliability_score,
         created_at: data.created_at,
       });
-      // Identify in RevenueCat
-      rcIdentifyUser(authUser.id);
+      if (Platform.OS !== 'web') {
+        rcIdentifyUser(authUser.id);
+      }
     } else {
       // New user — create profile skeleton
       const phone = authUser.phone ?? '';
@@ -86,10 +88,11 @@ export function useAuth(): AuthState & AuthActions {
 
         if (event === 'SIGNED_IN' && newSession?.user) {
           await fetchUserProfile(newSession.user);
-          // Register push notifications on sign in
-          const token = await registerForPushNotifications();
-          if (token && newSession.user.id) {
-            await savePushToken(newSession.user.id, token);
+          if (Platform.OS !== 'web') {
+            const token = await registerForPushNotifications();
+            if (token && newSession.user.id) {
+              await savePushToken(newSession.user.id, token);
+            }
           }
         } else if (event === 'SIGNED_OUT') {
           setUser(null);

@@ -1,28 +1,35 @@
-import * as Notifications from 'expo-notifications';
-import * as Device from 'expo-device';
 import { Platform } from 'react-native';
-import Constants from 'expo-constants';
 import { supabase } from './supabase';
 
-// ─── Notification handler configuration ──────────────────────
-// Show notifications even when app is in foreground
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-  }),
-});
+// Lazily-imported so native modules never load on web
+let Notifications: typeof import('expo-notifications') | null = null;
+let Device: typeof import('expo-device') | null = null;
+let Constants: typeof import('expo-constants').default | null = null;
+
+if (Platform.OS !== 'web') {
+  Notifications = require('expo-notifications');
+  Device = require('expo-device');
+  Constants = require('expo-constants').default;
+
+  Notifications!.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldPlaySound: true,
+      shouldSetBadge: true,
+    }),
+  });
+}
 
 // ─── Permission request + token registration ──────────────────
 
 export async function registerForPushNotifications(): Promise<string | null> {
+  if (Platform.OS === 'web' || !Notifications || !Device || !Constants) return null;
+
   if (!Device.isDevice) {
     console.log('Push notifications are only available on physical devices');
     return null;
   }
 
-  // Request permission
   const { status: existingStatus } = await Notifications.getPermissionsAsync();
   let finalStatus = existingStatus;
 
@@ -36,7 +43,6 @@ export async function registerForPushNotifications(): Promise<string | null> {
     return null;
   }
 
-  // Configure Android notification channel
   if (Platform.OS === 'android') {
     await Notifications.setNotificationChannelAsync('default', {
       name: 'Huddle',
@@ -54,10 +60,9 @@ export async function registerForPushNotifications(): Promise<string | null> {
     });
   }
 
-  // Get Expo push token
   const projectId =
     Constants?.expoConfig?.extra?.eas?.projectId ??
-    Constants?.easConfig?.projectId;
+    (Constants as any)?.easConfig?.projectId;
 
   if (!projectId) {
     console.error('No EAS project ID found in app.json');
@@ -65,10 +70,8 @@ export async function registerForPushNotifications(): Promise<string | null> {
   }
 
   const tokenData = await Notifications.getExpoPushTokenAsync({ projectId });
-  const token = tokenData.data;
-
-  console.log('Expo push token:', token);
-  return token;
+  console.log('Expo push token:', tokenData.data);
+  return tokenData.data;
 }
 
 // ─── Save token to Supabase ───────────────────────────────────
@@ -99,35 +102,32 @@ export async function scheduleLocalNotification(
   body: string,
   data: Record<string, unknown> = {},
   triggerSeconds?: number
-): Promise<string> {
-  const id = await Notifications.scheduleNotificationAsync({
-    content: {
-      title,
-      body,
-      data,
-      sound: 'default',
-    },
+): Promise<string | null> {
+  if (Platform.OS === 'web' || !Notifications) return null;
+  return Notifications.scheduleNotificationAsync({
+    content: { title, body, data, sound: 'default' },
     trigger: triggerSeconds
       ? { type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL, seconds: triggerSeconds }
       : null,
   });
-  return id;
 }
 
 export async function cancelNotification(id: string): Promise<void> {
+  if (Platform.OS === 'web' || !Notifications) return;
   await Notifications.cancelScheduledNotificationAsync(id);
 }
 
 export async function cancelAllNotifications(): Promise<void> {
+  if (Platform.OS === 'web' || !Notifications) return;
   await Notifications.cancelAllScheduledNotificationsAsync();
 }
 
-// ─── Badge management ─────────────────────────────────────────
-
 export async function setBadgeCount(count: number): Promise<void> {
+  if (Platform.OS === 'web' || !Notifications) return;
   await Notifications.setBadgeCountAsync(count);
 }
 
 export async function clearBadge(): Promise<void> {
+  if (Platform.OS === 'web' || !Notifications) return;
   await Notifications.setBadgeCountAsync(0);
 }
