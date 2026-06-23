@@ -2,7 +2,6 @@ import { useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image, Platform } from 'react-native';
 import { Slot, usePathname, useRouter } from 'expo-router';
 import { useAuth } from '@/hooks/useAuth';
-import Animated, { FadeInLeft } from 'react-native-reanimated';
 
 const NAV_ITEMS = [
   { label: 'Home', emoji: '🏠', href: '/' },
@@ -51,7 +50,7 @@ export default function DesktopShell() {
 
   return (
     <View style={styles.shell}>
-      <Animated.View entering={FadeInLeft.duration(280)} style={styles.sidebar}>
+      <View style={styles.sidebar}>
         {/* Wordmark */}
         <View style={styles.wordmark}>
           <Text style={{ fontSize: 20, marginRight: 8 }}>🤝</Text>
@@ -103,7 +102,7 @@ export default function DesktopShell() {
             <Text style={styles.userSub}>View profile</Text>
           </View>
         </TouchableOpacity>
-      </Animated.View>
+      </View>
 
       {/* Main content */}
       <View style={styles.main}>

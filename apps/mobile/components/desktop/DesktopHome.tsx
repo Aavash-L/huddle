@@ -5,7 +5,6 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
 import { useAuth } from '@/hooks/useAuth';
 import { usePlan } from '@/hooks/usePlan';
 import { usePlans, type PlanWithMeta } from '@/hooks/usePlans';
@@ -93,7 +92,7 @@ function PlanDetailPane({ planId }: { planId: string }) {
   };
 
   return (
-    <Animated.View entering={FadeIn.duration(220)} style={styles.detailPane}>
+    <View style={styles.detailPane}>
       {/* Themed header */}
       <LinearGradient
         colors={theme.gradient as [string, string]}
@@ -254,7 +253,7 @@ function PlanDetailPane({ planId }: { planId: string }) {
           </View>
         )}
       </ScrollView>
-    </Animated.View>
+    </View>
   );
 }
 
@@ -337,7 +336,7 @@ export default function DesktopHome() {
 
           {/* Empty state */}
           {!loading && plans.length === 0 && (
-            <Animated.View entering={FadeInDown.delay(200).springify()} style={{ alignItems: 'center', paddingHorizontal: 20, paddingTop: 60 }}>
+            <View style={{ alignItems: 'center', paddingHorizontal: 20, paddingTop: 60 }}>
               <Text style={{ fontSize: 48, marginBottom: 12 }}>🤷</Text>
               <Text style={{ color: '#fff', fontSize: 17, fontWeight: '700', textAlign: 'center', marginBottom: 6 }}>
                 No huddles yet
@@ -352,7 +351,7 @@ export default function DesktopHome() {
               >
                 <Text style={{ color: '#fff', fontWeight: '700', fontSize: 14 }}>＋ New Huddle</Text>
               </TouchableOpacity>
-            </Animated.View>
+            </View>
           )}
 
           {/* Grouped lists */}
@@ -368,7 +367,7 @@ export default function DesktopHome() {
                   </View>
                 </View>
                 {group.map((plan) => (
-                  <Animated.View key={plan.id} entering={FadeInDown.springify()}>
+                  <View key={plan.id}>
                     <TouchableOpacity
                       onPress={() => setSelectedPlanId(plan.id)}
                       activeOpacity={0.85}
@@ -385,7 +384,7 @@ export default function DesktopHome() {
                         onPress={() => setSelectedPlanId(plan.id)}
                       />
                     </TouchableOpacity>
-                  </Animated.View>
+                  </View>
                 ))}
               </View>
             );
