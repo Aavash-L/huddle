@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Bricolage_Grotesque, Inter } from 'next/font/google';
 import './globals.css';
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://huddle.app';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://huddle-eta-lake.vercel.app';
 
 const bricolage = Bricolage_Grotesque({
   subsets: ['latin'],

@@ -48,4 +48,4 @@ export const PLATFORMS: Record<'ios' | 'android' | 'mac' | 'windows' | 'web', Pl
 
 export const SMART_DOWNLOAD_URL = '/get';
 
-export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://huddle.app';
+export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://huddle-eta-lake.vercel.app';
