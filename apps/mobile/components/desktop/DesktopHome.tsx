@@ -46,7 +46,7 @@ function PlanDetailPane({ planId }: { planId: string }) {
 
   const handleShare = async () => {
     if (!plan?.share_token) return;
-    const url = `${WEB_URL}/plan/${plan.share_token}`;
+    const url = `${WEB_URL}/join/${plan.share_token}`;
     if (Platform.OS !== 'web') {
       await Share.share({ message: url, url });
     } else {
