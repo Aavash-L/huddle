@@ -55,6 +55,7 @@ export interface Plan {
   location: string | null;
   activity: string | null; // final chosen activity
   quorum_n: number; // min "in" count to auto-lock
+  share_token: string; // per-plan public invite link token
   created_at: string;
 }
 

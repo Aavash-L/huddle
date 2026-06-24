@@ -1,13 +1,16 @@
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Share, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import { useState } from 'react';
 import { usePlan } from '@/hooks/usePlan';
 import { useAuth } from '@/hooks/useAuth';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
 import AvatarCluster from '@/components/AvatarCluster';
 import { THEMES, PLAN_STATUSES, PLAN_TYPES } from '@huddle/shared';
 import type { CrewTheme } from '@huddle/shared';
+
+const WEB_URL = process.env.EXPO_PUBLIC_WEB_URL ?? 'https://huddle.app';
 
 function StatusPill({ status }: { status: string }) {
   const meta = PLAN_STATUSES[status as keyof typeof PLAN_STATUSES];
@@ -61,6 +64,7 @@ export default function PlanDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuth();
   const { isDesktop } = useBreakpoint();
+  const [shareCopied, setShareCopied] = useState(false);
   const {
     plan,
     commitments,
@@ -69,6 +73,18 @@ export default function PlanDetailScreen() {
     loading,
     submitCommitment,
   } = usePlan(id ?? '');
+
+  const handleShare = async () => {
+    if (!plan?.share_token) return;
+    const url = `${WEB_URL}/plan/${plan.share_token}`;
+    if (Platform.OS !== 'web') {
+      await Share.share({ message: url, url });
+    } else {
+      await navigator.clipboard.writeText(url);
+      setShareCopied(true);
+      setTimeout(() => setShareCopied(false), 2000);
+    }
+  };
 
   if (loading) {
     return (
@@ -200,6 +216,25 @@ export default function PlanDetailScreen() {
               onPress={() => router.push(`/(app)/plan/${id}/ai-suggestions`)}
             />
           </View>
+        </Animated.View>
+
+        {/* Share / Invite */}
+        <Animated.View entering={FadeInDown.delay(250).springify()} className="px-4 mb-4">
+          <TouchableOpacity
+            onPress={handleShare}
+            activeOpacity={0.8}
+            className="flex-row items-center justify-center gap-2 py-3.5 rounded-2xl border border-white/15 bg-white/5"
+          >
+            <Text className="text-lg">{shareCopied ? '✅' : '🔗'}</Text>
+            <Text className="text-white font-semibold text-sm">
+              {shareCopied ? 'Link copied!' : 'Share / Invite'}
+            </Text>
+          </TouchableOpacity>
+          {shareCopied && (
+            <Text className="text-white/40 text-xs text-center mt-1.5">
+              Anyone with the link can RSVP — no account needed
+            </Text>
+          )}
         </Animated.View>
 
         {/* My commitment */}

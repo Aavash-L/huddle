@@ -58,6 +58,39 @@ export interface PlanRow {
   availability: { user_id: string | null; response_token: string | null; time_window: any; available: boolean }[];
 }
 
+export interface SharePlanRow {
+  plan_id: string;
+  title: string;
+  type: string | null;
+  theme: string | null;
+  status: string;
+  locked_datetime: string | null;
+  location: string | null;
+  creator_name: string | null;
+  in_count: number;
+  invitee_count: number;
+}
+
+export async function resolveShareToken(shareToken: string): Promise<SharePlanRow | null> {
+  const { data, error } = await supabase.rpc('resolve_share_token', {
+    p_share_token: shareToken,
+  });
+  if (error || !data || data.length === 0) return null;
+  const row = data[0];
+  return {
+    plan_id: row.plan_id,
+    title: row.title,
+    type: row.type,
+    theme: row.theme,
+    status: row.status,
+    locked_datetime: row.locked_datetime,
+    location: row.location,
+    creator_name: row.creator_name,
+    in_count: Number(row.in_count),
+    invitee_count: Number(row.invitee_count),
+  };
+}
+
 export async function resolveResponseToken(token: string): Promise<PlanInviteeRow | null> {
   const { data, error } = await supabase
     .from('plan_invitees')

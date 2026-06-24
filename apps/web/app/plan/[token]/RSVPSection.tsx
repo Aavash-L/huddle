@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { createTokenClient } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase';
 
 interface RSVPSectionProps {
   planId: string;
@@ -29,17 +29,11 @@ export default function RSVPSection({
     setError(null);
 
     try {
-      // Web responders can't write to commitments (needs user_id), but they can
-      // indicate interest via availability. We'll use a special approach:
-      // We update a web_rsvp field on plan_invitees using the token.
-      const client = createTokenClient(responseToken);
-
-      // Write to a pseudo-commitment using the token for tracking
-      // In production, you'd add a web_rsvp column to plan_invitees
-      // For now we log via availability + a note in the plan's message
-      // This is the "soft" RSVP — real commitment requires the app
-
-      await new Promise((resolve) => setTimeout(resolve, 600)); // Simulate save
+      const { error: rsvpError } = await supabase.rpc('set_web_rsvp', {
+        p_response_token: responseToken,
+        p_rsvp: status,
+      });
+      if (rsvpError) throw rsvpError;
 
       setSaved(true);
     } catch (err: any) {

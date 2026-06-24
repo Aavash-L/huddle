@@ -2,6 +2,7 @@ import { useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
   RefreshControl, ActivityIndicator, StyleSheet,
+  Share, Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
@@ -36,9 +37,24 @@ function StatusPill({ status }: { status: string }) {
   );
 }
 
+const WEB_URL = process.env.EXPO_PUBLIC_WEB_URL ?? 'https://huddle.app';
+
 function PlanDetailPane({ planId }: { planId: string }) {
   const { user } = useAuth();
   const { plan, commitments, creator, messages, loading, submitCommitment } = usePlan(planId);
+  const [shareCopied, setShareCopied] = useState(false);
+
+  const handleShare = async () => {
+    if (!plan?.share_token) return;
+    const url = `${WEB_URL}/plan/${plan.share_token}`;
+    if (Platform.OS !== 'web') {
+      await Share.share({ message: url, url });
+    } else {
+      await navigator.clipboard.writeText(url);
+      setShareCopied(true);
+      setTimeout(() => setShareCopied(false), 2000);
+    }
+  };
 
   if (loading) {
     return (
@@ -138,6 +154,36 @@ function PlanDetailPane({ planId }: { planId: string }) {
             </View>
             <AvatarCluster inUsers={inUsers} waveringUsers={waveringUsers} size="large" />
           </View>
+        </View>
+
+        {/* Share / Invite */}
+        <View style={[styles.section, { paddingBottom: 0 }]}>
+          <TouchableOpacity
+            onPress={handleShare}
+            activeOpacity={0.8}
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+              paddingVertical: 12,
+              borderRadius: 12,
+              borderWidth: 1,
+              borderColor: 'rgba(255,255,255,0.12)',
+              backgroundColor: 'rgba(255,255,255,0.04)',
+              cursor: 'pointer' as any,
+            }}
+          >
+            <Text style={{ fontSize: 16 }}>{shareCopied ? '✅' : '🔗'}</Text>
+            <Text style={{ color: '#fff', fontWeight: '600', fontSize: 13 }}>
+              {shareCopied ? 'Link copied!' : 'Share / Invite'}
+            </Text>
+          </TouchableOpacity>
+          {shareCopied && (
+            <Text style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11, textAlign: 'center', marginTop: 6 }}>
+              Anyone with the link can RSVP — no account needed
+            </Text>
+          )}
         </View>
 
         {/* Are you in? */}

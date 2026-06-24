@@ -12,7 +12,7 @@ export interface PlanWithMeta extends Plan {
 const PLAN_SELECT = `
   *,
   creator:users!creator_id(name),
-  plan_invitees(user_id),
+  plan_invitees(user_id, rsvp),
   commitments(user_id, status)
 `;
 
@@ -73,12 +73,14 @@ export function usePlans() {
 
     const mapped: PlanWithMeta[] = merged.map((p: any) => {
       const cs = p.commitments ?? [];
+      const invitees = p.plan_invitees ?? [];
       const mine = cs.find((c: any) => c.user_id === uid);
+      const webInCount = invitees.filter((pi: any) => pi.user_id === null && pi.rsvp === 'in').length;
       return {
         ...p,
         creator_name: p.creator?.name ?? 'Someone',
-        in_count: cs.filter((c: any) => c.status === 'in').length,
-        invitee_count: p.plan_invitees?.length ?? 0,
+        in_count: cs.filter((c: any) => c.status === 'in').length + webInCount,
+        invitee_count: invitees.length,
         my_commitment: mine?.status ?? null,
       };
     });
