@@ -117,13 +117,18 @@ export default function DownloadHub() {
               {PLATFORMS.web.enabled ? (
                 <a
                   href={PLATFORMS.web.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="inline-flex w-full items-center justify-center rounded-[14px] bg-[#F4F6FB] px-5 py-3 text-sm font-bold text-[#0A0E14] transition-transform active:scale-95"
                 >
-                  Open web app
+                  Open web app ↗
                 </a>
               ) : (
-                <div className="rounded-[14px] border border-[rgba(255,255,255,0.10)] bg-[#1A2230] px-4 py-3 text-center text-sm font-semibold text-[#9AA6B8]">
-                  Web app — coming soon
+                <div
+                  className="cursor-not-allowed rounded-[14px] border border-[rgba(255,255,255,0.06)] bg-[#1A2230] px-4 py-3 text-center text-sm font-semibold"
+                  style={{ color: 'rgba(154,166,184,0.5)' }}
+                >
+                  Coming soon
                 </div>
               )}
             </div>
