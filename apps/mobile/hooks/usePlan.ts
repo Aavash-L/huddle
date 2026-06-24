@@ -18,6 +18,7 @@ interface PlanState {
   messages: MessageWithUser[];
   suggestions: Suggestion[];
   creator: UserPublic | null;
+  webInCount: number;
   loading: boolean;
   error: string | null;
 }
@@ -41,6 +42,7 @@ export function usePlan(planId: string): PlanState & PlanActions {
   const [creator, setCreator] = useState<UserPublic | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [webInCount, setWebInCount] = useState(0);
 
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
@@ -94,6 +96,14 @@ export function usePlan(planId: string): PlanState & PlanActions {
       setAvailability((availRes.data ?? []) as Availability[]);
       setMessages((messagesRes.data ?? []) as unknown as MessageWithUser[]);
       setSuggestions((suggestionsRes.data ?? []) as Suggestion[]);
+
+      // Web RSVPs from anonymous plan_invitees
+      const { data: webRows } = await supabase
+        .from('plan_invitees')
+        .select('rsvp')
+        .eq('plan_id', planId)
+        .is('user_id', null);
+      setWebInCount((webRows ?? []).filter((r: any) => r.rsvp === 'in').length);
     } catch (err: any) {
       setError(err.message ?? 'Failed to load plan');
     } finally {
@@ -212,6 +222,23 @@ export function usePlan(planId: string): PlanState & PlanActions {
         },
         (payload) => {
           setPlan(payload.new as Plan);
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'plan_invitees',
+          filter: `plan_id=eq.${planId}`,
+        },
+        async () => {
+          const { data } = await supabase
+            .from('plan_invitees')
+            .select('rsvp')
+            .eq('plan_id', planId)
+            .is('user_id', null);
+          setWebInCount((data ?? []).filter((r: any) => r.rsvp === 'in').length);
         }
       )
       .subscribe();
@@ -339,6 +366,7 @@ export function usePlan(planId: string): PlanState & PlanActions {
     messages,
     suggestions,
     creator,
+    webInCount,
     loading,
     error,
     refresh: fetchPlanData,

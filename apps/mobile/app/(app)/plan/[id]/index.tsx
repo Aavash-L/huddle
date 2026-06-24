@@ -70,6 +70,7 @@ export default function PlanDetailScreen() {
     commitments,
     availability,
     creator,
+    webInCount,
     loading,
     submitCommitment,
   } = usePlan(id ?? '');
@@ -177,7 +178,7 @@ export default function PlanDetailScreen() {
           <View className="bg-white/5 rounded-2xl p-4">
             <View className="flex-row items-center justify-between mb-4">
               <Text className="text-white font-bold text-lg">
-                {inCount} of {commitments.length} are in 🔥
+                {inCount + webInCount} of {commitments.length} are in 🔥
               </Text>
               {waveringCount > 0 && (
                 <Text className="text-yellow-400 text-sm">

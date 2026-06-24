@@ -41,7 +41,7 @@ const WEB_URL = process.env.EXPO_PUBLIC_WEB_URL ?? 'https://huddle.app';
 
 function PlanDetailPane({ planId }: { planId: string }) {
   const { user } = useAuth();
-  const { plan, commitments, creator, messages, loading, submitCommitment } = usePlan(planId);
+  const { plan, commitments, creator, messages, webInCount, loading, submitCommitment } = usePlan(planId);
   const [shareCopied, setShareCopied] = useState(false);
 
   const handleShare = async () => {
@@ -167,7 +167,7 @@ function PlanDetailPane({ planId }: { planId: string }) {
           <View style={styles.card}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
               <Text style={{ color: '#fff', fontWeight: '700', fontSize: 15 }}>
-                {inCount} of {commitments.length} are in 🔥
+                {inCount + webInCount} of {commitments.length} are in 🔥
               </Text>
               {waveringCount > 0 && (
                 <Text style={{ color: '#FBBF24', fontSize: 13 }}>{waveringCount} maybe</Text>
