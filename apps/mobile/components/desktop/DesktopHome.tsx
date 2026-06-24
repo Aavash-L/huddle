@@ -133,6 +133,27 @@ function PlanDetailPane({ planId }: { planId: string }) {
             </Text>
           </View>
         )}
+
+        <TouchableOpacity
+          onPress={handleShare}
+          activeOpacity={0.8}
+          style={{
+            marginTop: 14,
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 8,
+            paddingVertical: 10,
+            borderRadius: 10,
+            backgroundColor: 'rgba(0,0,0,0.25)',
+            cursor: 'pointer' as any,
+          }}
+        >
+          <Text style={{ fontSize: 14 }}>{shareCopied ? '✅' : '🔗'}</Text>
+          <Text style={{ color: '#fff', fontWeight: '700', fontSize: 13 }}>
+            {shareCopied ? 'Link copied!' : 'Share / Invite'}
+          </Text>
+        </TouchableOpacity>
       </LinearGradient>
 
       <ScrollView
@@ -154,36 +175,6 @@ function PlanDetailPane({ planId }: { planId: string }) {
             </View>
             <AvatarCluster inUsers={inUsers} waveringUsers={waveringUsers} size="large" />
           </View>
-        </View>
-
-        {/* Share / Invite */}
-        <View style={[styles.section, { paddingBottom: 0 }]}>
-          <TouchableOpacity
-            onPress={handleShare}
-            activeOpacity={0.8}
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 8,
-              paddingVertical: 13,
-              borderRadius: 12,
-              backgroundColor: '#1C2A3A',
-              borderWidth: 1.5,
-              borderColor: '#667EEA',
-              cursor: 'pointer' as any,
-            }}
-          >
-            <Text style={{ fontSize: 16 }}>{shareCopied ? '✅' : '🔗'}</Text>
-            <Text style={{ color: '#667EEA', fontWeight: '700', fontSize: 13 }}>
-              {shareCopied ? 'Link copied!' : 'Share / Invite'}
-            </Text>
-          </TouchableOpacity>
-          {shareCopied && (
-            <Text style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11, textAlign: 'center', marginTop: 6 }}>
-              Anyone with the link can RSVP — no account needed
-            </Text>
-          )}
         </View>
 
         {/* Are you in? */}
