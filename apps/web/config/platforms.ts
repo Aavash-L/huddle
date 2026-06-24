@@ -11,7 +11,7 @@ const ANDROID_URL = process.env.NEXT_PUBLIC_ANDROID_URL ?? '';
 const MAC_DMG_URL = process.env.NEXT_PUBLIC_MAC_DMG_URL ?? '';
 // Windows: GitHub Release .msi/.exe
 const WINDOWS_URL = process.env.NEXT_PUBLIC_WINDOWS_URL ?? '';
-const WEB_APP_URL = process.env.NEXT_PUBLIC_WEB_APP_URL ?? '';
+const WEB_APP_URL = process.env.NEXT_PUBLIC_WEB_APP_URL ?? 'https://huddle-web-lyart.vercel.app';
 
 export const PLATFORMS: Record<'ios' | 'android' | 'mac' | 'windows' | 'web', PlatformConfig> = {
   ios: {
