@@ -117,11 +117,9 @@ export default function DownloadHub() {
               {PLATFORMS.web.enabled ? (
                 <a
                   href={PLATFORMS.web.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
                   className="inline-flex w-full items-center justify-center rounded-[14px] bg-[#F4F6FB] px-5 py-3 text-sm font-bold text-[#0A0E14] transition-transform active:scale-95"
                 >
-                  Open web app ↗
+                  Open web app
                 </a>
               ) : (
                 <div
