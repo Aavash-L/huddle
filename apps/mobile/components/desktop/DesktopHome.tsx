@@ -166,16 +166,16 @@ function PlanDetailPane({ planId }: { planId: string }) {
               alignItems: 'center',
               justifyContent: 'center',
               gap: 8,
-              paddingVertical: 12,
+              paddingVertical: 13,
               borderRadius: 12,
-              borderWidth: 1,
-              borderColor: 'rgba(255,255,255,0.12)',
-              backgroundColor: 'rgba(255,255,255,0.04)',
+              backgroundColor: '#1C2A3A',
+              borderWidth: 1.5,
+              borderColor: '#667EEA',
               cursor: 'pointer' as any,
             }}
           >
             <Text style={{ fontSize: 16 }}>{shareCopied ? '✅' : '🔗'}</Text>
-            <Text style={{ color: '#fff', fontWeight: '600', fontSize: 13 }}>
+            <Text style={{ color: '#667EEA', fontWeight: '700', fontSize: 13 }}>
               {shareCopied ? 'Link copied!' : 'Share / Invite'}
             </Text>
           </TouchableOpacity>
