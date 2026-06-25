@@ -260,23 +260,23 @@ export default function JoinPage() {
               <Text style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, marginBottom: 16, lineHeight: 20 }}>
                 Download the app to get notified when plans change.
               </Text>
-              <TouchableOpacity
-                onPress={() => {
-                  if (Platform.OS !== 'web') return;
-                  const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
-                  const url = isIOS
+              {/* @ts-ignore — native <a> avoids Safari popup-blocking window.open() */}
+              <a
+                href={
+                  typeof navigator !== 'undefined' && /iPhone|iPad|iPod/.test(navigator.userAgent)
                     ? (process.env.EXPO_PUBLIC_IOS_URL ?? 'https://apps.apple.com')
-                    : (process.env.EXPO_PUBLIC_ANDROID_URL ?? 'https://play.google.com');
-                  window.open(url, '_blank');
-                }}
-                activeOpacity={0.85}
+                    : (process.env.EXPO_PUBLIC_ANDROID_URL ?? 'https://play.google.com')
+                }
+                target="_blank"
+                rel="noopener noreferrer"
                 style={{
+                  display: 'flex', justifyContent: 'center', alignItems: 'center',
                   backgroundColor: '#667EEA', borderRadius: 12, padding: 14,
-                  alignItems: 'center', cursor: 'pointer' as any,
-                }}
+                  textDecoration: 'none',
+                } as any}
               >
-                <Text style={{ color: '#fff', fontWeight: '700', fontSize: 14 }}>📱 Get the App (Free)</Text>
-              </TouchableOpacity>
+                <span style={{ color: '#fff', fontWeight: '700', fontSize: 14 }}>📱 Get the App (Free)</span>
+              </a>
             </View>
           </>
         ) : (

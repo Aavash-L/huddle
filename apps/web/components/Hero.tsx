@@ -119,6 +119,8 @@ export default function Hero() {
                   {PLATFORMS.web.enabled && (
                     <a
                       href={PLATFORMS.web.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className={secondaryBtn}
                       onClick={() => track('web', PLATFORMS.web.url)}
                     >

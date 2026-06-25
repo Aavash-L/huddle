@@ -31,16 +31,15 @@ export default function AppDownloadPrompt({ planTitle, planId, token }: AppDownl
     sessionStorage.setItem(`huddle_app_prompt_${planId}`, '1');
   };
 
-  const handleGetApp = () => {
+  const getAppUrl = () => {
     const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
     const isAndroid = /Android/.test(navigator.userAgent);
-
     const IOS_URL = process.env.NEXT_PUBLIC_IOS_URL ?? 'https://apps.apple.com';
     const ANDROID_URL = process.env.NEXT_PUBLIC_ANDROID_URL ?? 'https://play.google.com';
+    return isIOS ? IOS_URL : isAndroid ? ANDROID_URL : IOS_URL;
+  };
 
-    const url = isIOS ? IOS_URL : isAndroid ? ANDROID_URL : IOS_URL;
-
-    // Track the action
+  const handleGetApp = () => {
     try {
       fetch('/api/track', {
         method: 'POST',
@@ -51,8 +50,6 @@ export default function AppDownloadPrompt({ planTitle, planId, token }: AppDownl
         }),
       }).catch(() => {});
     } catch {}
-
-    window.open(url, '_blank');
     handleDismiss();
   };
 
@@ -101,15 +98,18 @@ export default function AppDownloadPrompt({ planTitle, planId, token }: AppDownl
                 event again.
               </p>
 
-              <button
+              <a
+                href={getAppUrl()}
+                target="_blank"
+                rel="noopener noreferrer"
                 onClick={handleGetApp}
-                className="w-full py-3 rounded-2xl text-center font-bold text-white text-sm"
+                className="block w-full py-3 rounded-2xl text-center font-bold text-white text-sm"
                 style={{
                   background: 'linear-gradient(135deg, #667EEA, #764BA2)',
                 }}
               >
                 📱 Get the App (Free)
-              </button>
+              </a>
 
               <button
                 onClick={handleDismiss}
