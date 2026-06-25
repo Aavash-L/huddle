@@ -79,6 +79,8 @@ export default function PlatformCard({
           <>
             <a
               href={url}
+              target="_blank"
+              rel="noopener noreferrer"
               onClick={() => track('cta_click', platform, { url })}
               className="inline-flex w-full items-center justify-center rounded-[14px] bg-[#F4F6FB] px-5 py-3 text-sm font-bold text-[#0A0E14] transition-transform active:scale-95"
             >

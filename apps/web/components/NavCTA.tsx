@@ -60,6 +60,21 @@ export default function NavCTA() {
     );
   }
 
+  // Desktop / Mac-without-DMG: send them straight to the web app
+  if (PLATFORMS.web.enabled) {
+    return (
+      <a
+        href={PLATFORMS.web.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={pill}
+        onClick={() => track('web', PLATFORMS.web.url)}
+      >
+        Open web app
+      </a>
+    );
+  }
+
   return (
     <a href="#download" className={pill} onClick={() => track('desktop', '#download')}>
       Get Huddle
